@@ -84,9 +84,9 @@ smart-office-ai/
    - `make up` / `make down` 等のショートカットコマンド
 
 **確認ポイント**:
-- [ ] `docker-compose up` で全サービスが起動する
-- [ ] PostgreSQLにpgvector拡張がインストールされている
-- [ ] Caddyが80/443ポートで待ち受けている
+- [x] `docker-compose up` で全サービスが起動する
+- [x] PostgreSQLにpgvector拡張がインストールされている
+- [x] Caddyが80/443ポートで待ち受けている
 
 ---
 

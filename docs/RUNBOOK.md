@@ -29,10 +29,11 @@ vim .env  # 必須項目を編集
 openssl rand -hex 32  # JWT_SECRET_KEY 用
 
 # 4. コンテナの起動
-docker-compose up -d
+# Note: Docker Compose V2 では `docker compose` を使用します
+docker compose up -d
 
 # 5. データベースマイグレーション
-docker-compose exec backend alembic upgrade head
+docker compose exec backend alembic upgrade head
 
 # 6. 動作確認
 curl https://your-domain.com/health
@@ -48,13 +49,13 @@ git pull origin main
 vim .env
 
 # 3. イメージの再ビルド
-docker-compose build backend frontend
+docker compose build backend frontend
 
 # 4. コンテナの再起動
-docker-compose up -d
+docker compose up -d
 
 # 5. マイグレーションの適用（必要な場合）
-docker-compose exec backend alembic upgrade head
+docker compose exec backend alembic upgrade head
 
 # 6. ヘルスチェック
 curl https://your-domain.com/health
@@ -64,13 +65,13 @@ curl https://your-domain.com/health
 
 ```bash
 # 1. 新しいコンテナで起動
-docker-compose -f docker-compose.yml -f docker-compose.new.yml up -d
+docker compose -f docker-compose.yml -f docker-compose.new.yml up -d
 
 # 2. ヘルスチェック
 curl https://your-domain.com/health
 
 # 3. 古いコンテナを停止
-docker-compose -f docker-compose.yml down
+docker compose -f docker-compose.yml down
 ```
 
 ---
@@ -81,8 +82,8 @@ docker-compose -f docker-compose.yml down
 
 ```bash
 # バックエンドヘルスチェック
-curl https://your-domain.com/api/v1/health
-# 期待されるレスポンス: {"status":"ok","timestamp":"..."}
+curl https://your-domain.com/health
+# 期待されるレスポンス: {"status":"ok"}
 
 # データベース接続チェック
 docker-compose exec backend python -c "from app.core.database import init_db; import asyncio; asyncio.run(init_db())"
@@ -92,14 +93,14 @@ docker-compose exec backend python -c "from app.core.database import init_db; im
 
 ```bash
 # 全サービスの状態
-docker-compose ps
+docker compose ps
 
 # 個別のサービス状態
-docker-compose ps backend
-docker-compose ps postgres
-docker-compose redis
-docker-compose ollama
-docker-compose caddy
+docker compose ps backend
+docker compose ps postgres
+docker compose ps redis
+docker compose ps ollama
+docker compose ps caddy
 
 # リソース使用状況
 docker stats
@@ -109,13 +110,13 @@ docker stats
 
 ```bash
 # バックエンドログ（エラーのみ）
-docker-compose logs backend | grep -i error
+docker compose logs backend | grep -i error
 
 # データベースログ
-docker-compose logs postgres | tail -100
+docker compose logs postgres | tail -100
 
 # 全サービスの最新ログ
-docker-compose logs --tail=50 --follow
+docker compose logs --tail=50 --follow
 ```
 
 ### アラート設定（推奨）
@@ -140,18 +141,18 @@ docker-compose logs --tail=50 --follow
 
 **診断**:
 ```bash
-docker-compose ps backend
-docker-compose logs backend --tail=100
+docker compose ps backend
+docker compose logs backend --tail=100
 ```
 
 **解決策**:
 ```bash
 # コンテナの再起動
-docker-compose restart backend
+docker compose restart backend
 
 # 問題が解決しない場合、再ビルド
-docker-compose build backend
-docker-compose up -d backend
+docker compose build backend
+docker compose up -d backend
 ```
 
 #### 問題: データベース接続エラー
@@ -160,8 +161,8 @@ docker-compose up -d backend
 
 **診断**:
 ```bash
-docker-compose ps postgres
-docker-compose logs postgres --tail=50
+docker compose ps postgres
+docker compose logs postgres --tail=50
 ```
 
 **解決策**:
@@ -180,17 +181,17 @@ make shell-db
 
 **診断**:
 ```bash
-docker-compose exec backend alembic current
-docker-compose exec backend alembic history
+docker compose exec backend alembic current
+docker compose exec backend alembic history
 ```
 
 **解決策**:
 ```bash
 # 1つ戻す
-docker-compose exec backend alembic downgrade -1
+docker compose exec backend alembic downgrade -1
 
 # スキップして強制適用（緊急時のみ）
-docker-compose exec backend alembic stamp head
+docker compose exec backend alembic stamp head
 ```
 
 ### フロントエンド関連
@@ -206,8 +207,8 @@ docker-compose exec backend alembic stamp head
 **解決策**:
 ```bash
 # フロントエンドの再ビルド
-docker-compose build frontend
-docker-compose up -d frontend
+docker compose build frontend
+docker compose up -d frontend
 ```
 
 ### AI関連
@@ -223,10 +224,10 @@ docker-compose logs ollama --tail=50
 **解決策**:
 ```bash
 # Ollama コンテナの再起動
-docker-compose restart ollama
+docker compose restart ollama
 
 # モデルの再プル
-docker-compose exec ollama ollama pull llama3.2
+docker compose exec ollama ollama pull llama3.2
 ```
 
 ---
@@ -243,37 +244,37 @@ git log --oneline -10
 git checkout <previous-stable-commit>
 
 # 3. 再デプロイ
-docker-compose build backend frontend
-docker-compose up -d
+docker compose build backend frontend
+docker compose up -d
 
 # 4. マイグレーションのロールバック（必要な場合）
-docker-compose exec backend alembic downgrade -1
+docker compose exec backend alembic downgrade -1
 ```
 
 ### データベースマイグレーションのロールバック
 
 ```bash
 # 1つ戻す
-docker-compose exec backend alembic downgrade -1
+docker compose exec backend alembic downgrade -1
 
 # 特定のバージョンへ戻す
-docker-compose exec backend alembic downgrade <revision_id>
+docker compose exec backend alembic downgrade <revision_id>
 
 # 全て戻す（ベースラインへ）
-docker-compose exec backend alembic downgrade base
+docker compose exec backend alembic downgrade base
 ```
 
 ### 緊急ロールバック（全システム）
 
 ```bash
 # 1. システム停止
-docker-compose down
+docker compose down
 
 # 2. 前の安定版イメージを使用
 # docker-compose.yml でイメージタグを変更
 
 # 3. 再起動
-docker-compose up -d
+docker compose up -d
 ```
 
 ---
@@ -284,24 +285,24 @@ docker-compose up -d
 
 ```bash
 # バックアップ作成
-docker-compose exec postgres pg_dump -U smartoffice smartoffice > backup_$(date +%Y%m%d).sql
+docker compose exec postgres pg_dump -U smartoffice smartoffice > backup_$(date +%Y%m%d).sql
 
 # 圧縮付きバックアップ
-docker-compose exec postgres pg_dump -U smartoffice smartoffice | gzip > backup_$(date +%Y%m%d).sql.gz
+docker compose exec postgres pg_dump -U smartoffice smartoffice | gzip > backup_$(date +%Y%m%d).sql.gz
 
 # 自動バックアップ（cronジョブ）
 # 毎日午前2時にバックアップ
-0 2 * * * docker-compose exec postgres pg_dump -U smartoffice smartoffice | gzip > /backups/db_$(date +\%Y\%m\%d).sql.gz
+0 2 * * * docker compose exec postgres pg_dump -U smartoffice smartoffice | gzip > /backups/db_$(date +\%Y\%m\%d).sql.gz
 ```
 
 ### データベースリストア
 
 ```bash
 # バックアップからのリストア
-gunzip -c backup_20250101.sql.gz | docker-compose exec -T postgres psql -U smartoffice smartoffice
+gunzip -c backup_20250101.sql.gz | docker compose exec -T postgres psql -U smartoffice smartoffice
 
 # または
-cat backup_20250101.sql | docker-compose exec -T postgres psql -U smartoffice smartoffice
+cat backup_20250101.sql | docker compose exec -T postgres psql -U smartoffice smartoffice
 ```
 
 ### ボリュームバックアップ（Docker）

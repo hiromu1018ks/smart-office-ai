@@ -7,22 +7,11 @@ import { App } from './App'
  * Verifies that the application renders without crashing.
  */
 describe('App', () => {
-  it('renders the placeholder page', () => {
+  it('renders the application', () => {
     render(<App />)
 
-    // Verify the main heading is present
-    expect(screen.getByText('Smart Office AI')).toBeInTheDocument()
-
-    // Verify the tagline is present
-    expect(
-      screen.getByText(/All-in-one AI-powered office suite/i),
-    ).toBeInTheDocument()
-
-    // Verify status indicators are present
-    expect(screen.getByText(/React \+ TypeScript/)).toBeInTheDocument()
-    expect(screen.getByText(/Vite \+ HMR/)).toBeInTheDocument()
-    expect(screen.getByText(/Tailwind CSS/)).toBeInTheDocument()
-    expect(screen.getByText(/React Router/)).toBeInTheDocument()
+    // Verify the app name is present
+    expect(screen.getAllByText('Smart Office AI').length).toBeGreaterThan(0)
   })
 
   it('renders with the correct root element structure', () => {
@@ -33,9 +22,11 @@ describe('App', () => {
     expect(rootDiv).toBeDefined()
   })
 
-  it('displays the step completion message', () => {
+  it('displays navigation items', () => {
     render(<App />)
 
-    expect(screen.getByText(/Step 5: Frontend Foundation Complete/)).toBeInTheDocument()
+    // Verify navigation is rendered
+    expect(screen.getAllByText('Dashboard').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Chat').length).toBeGreaterThan(0)
   })
 })

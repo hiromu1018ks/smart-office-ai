@@ -57,3 +57,71 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Magic UI Animations */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes shimmer-slide {
+  0% {
+    transform: translateX(-100%) rotate(45deg);
+  }
+  100% {
+    transform: translateX(100%) rotate(45deg);
+  }
+}
+
+@keyframes rainbow {
+  0% {
+    background-position: 0%;
+  }
+  100% {
+    background-position: 200%;
+  }
+}
+
+@keyframes spin-around {
+  0% {
+    transform: translateZ(0) rotate(0);
+  }
+  100% {
+    transform: translateZ(0) rotate(360deg);
+  }
+}
+
+@keyframes rippling {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s linear infinite;
+}
+
+.animate-shimmer-slide {
+  animation: shimmer-slide 2s linear infinite;
+}
+
+.animate-rainbow {
+  animation: rainbow 4s linear infinite;
+}
+
+.animate-spin-around {
+  animation: spin-around 6s linear infinite;
+}
+
+.animate-rippling {
+  animation: rippling 0.6s ease-out;
+}

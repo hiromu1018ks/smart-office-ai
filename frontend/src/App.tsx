@@ -1,5 +1,9 @@
-import { RouterProvider, createBrowserRouter } from 'react-router-dom'
-import { Placeholder } from './pages/Placeholder'
+import { RouterProvider, createBrowserRouter } from 'react-router'
+import { Layout } from './components/layout/Layout'
+import { Login } from './pages/Login'
+import { Dashboard } from './pages/Dashboard'
+import { Chat } from './pages/Chat'
+import { ProtectedRoute } from './pages/ProtectedRoute'
 
 /**
  * Router configuration.
@@ -7,17 +11,37 @@ import { Placeholder } from './pages/Placeholder'
  */
 const router = createBrowserRouter([
   {
-    path: '/',
-    element: <Placeholder />,
+    path: '/login',
+    element: <Login />,
   },
-  // Additional routes will be added in future steps:
-  // - /auth/login
-  // - /auth/register
-  // - /chat
-  // - /calendar
-  // - /tasks
-  // - /files
-  // - /crm
+  {
+    path: '/',
+    element: (
+      <ProtectedRoute>
+        <Layout />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        index: true,
+        element: <Dashboard />,
+      },
+      {
+        path: 'chat',
+        element: <Chat />,
+      },
+      // Additional routes will be added in future steps:
+      // - calendar
+      // - tasks
+      // - files
+      // - settings
+    ],
+  },
+  // Catch-all route - redirect to dashboard
+  {
+    path: '*',
+    element: <Login />,
+  },
 ])
 
 /**

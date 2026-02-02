@@ -1,0 +1,25 @@
+# Alembic Migrations
+
+This directory contains Alembic migration scripts for the Smart Office AI database.
+
+## Running Migrations
+
+From inside the backend container or with backend venv activated:
+
+```bash
+# Apply all migrations
+alembic upgrade head
+
+# Rollback one migration
+alembic downgrade -1
+
+# Create a new migration
+alembic revision -m "description of changes"
+
+# Autogenerate migration from models
+alembic revision --autogenerate -m "description"
+```
+
+## Migration Files
+
+- `001_init_user_table.py`: Creates users table and enables pgvector extension

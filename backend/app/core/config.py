@@ -5,6 +5,9 @@ class Settings(BaseSettings):
     # データベース
     DATABASE_URL: str
     REDIS_URL: str
+    DB_POOL_SIZE: int = 5
+    DB_MAX_OVERFLOW: int = 10
+    DB_ECHO: bool = False  # SQLAlchemy query logging
 
     # JWT
     JWT_SECRET_KEY: str

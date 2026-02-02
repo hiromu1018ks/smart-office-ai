@@ -4,15 +4,19 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
+from app.core.database import init_db, close_db
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # 起動時の処理
-    print("🚀 Smart Office AI Backend starting...")
+    print("Smart Office AI Backend starting...")
+    # データベース拡張の初期化（pgvector, uuid-ossp）
+    await init_db()
     yield
     # シャットダウン時の処理
-    print("👋 Smart Office AI Backend shutting down...")
+    print("Smart Office AI Backend shutting down...")
+    await close_db()
 
 
 app = FastAPI(

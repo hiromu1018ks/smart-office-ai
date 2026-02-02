@@ -122,8 +122,8 @@ smart-office-ai/
    - ヘルスチェックエンドポイント
 
 **確認ポイント**:
-- [ ] `http://localhost:8000/health` でOKレスポンス
-- [ ] 自動APIドキュメント（`http://localhost:8000/docs`）が表示される
+- [x] `http://localhost:8000/health` でOKレスポンス
+- [x] 自動APIドキュメント（`http://localhost:8000/docs`）が表示される
 
 ---
 
@@ -152,8 +152,9 @@ smart-office-ai/
    - 最初のマイグレーション（ユーザーテーブル作成）
 
 **確認ポイント**:
-- [ ] `alembic upgrade head` でテーブルが作成される
-- [ ] pgvector拡張が有効になっている
+- [x] `alembic upgrade head` でテーブルが作成される
+- [x] pgvector拡張が有効になっている
+- [x] テストカバレッジ95%達成
 
 ---
 

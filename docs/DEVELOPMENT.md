@@ -118,6 +118,62 @@ fix/*         - バグ修正ブランチ
 
 ---
 
+## API認証エンドポイント
+
+### 認証フロー概要
+
+1. **ユーザー登録** - `POST /api/v1/auth/register`
+2. **ログイン** - `POST /api/v1/auth/login`
+3. **TOTP設定（2段階）** - `POST /api/v1/auth/2fa/setup` → `POST /api/v1/auth/2fa/enable`
+4. **TOTP無効化** - `POST /api/v1/auth/2fa/disable`
+
+### APIエンドポイント一覧
+
+| メソッド | パス | 認証 | 説明 |
+|--------|------|------|------|
+| POST | `/api/v1/auth/register` | 不要 | ユーザー登録 |
+| POST | `/api/v1/auth/login` | 不要 | ログイン（2FA有効時はTOTP必須） |
+| POST | `/api/v1/auth/2fa/setup` | 必須 | TOTPシークレット生成（保存しない） |
+| POST | `/api/v1/auth/2fa/enable` | 必須 | TOTP有効化（コード検証後に保存） |
+| POST | `/api/v1/auth/2fa/disable` | 必須 | TOTP無効化（コード必須） |
+| POST | `/api/v1/auth/2fa/verify` | 必須 | TOTPコード検証 |
+| GET | `/api/v1/auth/me` | 必須 | 現在のユーザー情報取得 |
+
+### cURL使用例
+
+```bash
+# ユーザー登録
+curl -X POST http://localhost:8000/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com","username":"testuser","password":"SecurePass123"}'
+
+# ログイン
+curl -X POST http://localhost:8000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com","password":"SecurePass123"}'
+
+# ログイン（2FA有効時）
+curl -X POST http://localhost:8000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com","password":"SecurePass123","totp_code":"123456"}'
+
+# TOTP設定（シークレット取得）
+curl -X POST http://localhost:8000/api/v1/auth/2fa/setup \
+  -H "Authorization: Bearer <token>"
+
+# TOTP有効化
+curl -X POST http://localhost:8000/api/v1/auth/2fa/enable \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"secret":"<32char_secret>","code":"123456"}'
+
+# 現在のユーザー情報
+curl -X GET http://localhost:8000/api/v1/auth/me \
+  -H "Authorization: Bearer <token>"
+```
+
+---
+
 ## 利用可能なコマンド
 
 ### Makefile コマンド
@@ -357,10 +413,12 @@ smart-office-ai/
 |--------|------|------------|
 | `DATABASE_URL` | PostgreSQL接続URL | - |
 | `REDIS_URL` | Redis接続URL | `redis://redis:6379/0` |
-| `JWT_SECRET_KEY` | JWT署名キー | - |
-| `JWT_ACCESS_TOKEN_EXPIRE_MINUTES` | アクセストークン有効期限（分） | `30` |
+| `JWT_SECRET_KEY` | JWT署名キー（32文字以上推奨） | - |
+| `JWT_ALGORITHM` | JWTアルゴリズム | `HS256` |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | アクセストークン有効期限（分） | `30` |
 | `OLLAMA_BASE_URL` | Ollama API URL | `http://ollama:11434` |
 | `OLLAMA_MODEL` | デフォルトモデル名 | `llama3.2` |
 | `DB_POOL_SIZE` | DB接続プールサイズ | `5` |
 | `DB_MAX_OVERFLOW` | DB接続プール最大オーバーフロー | `10` |
 | `DB_ECHO` | SQLクエリログ出力 | `false` |
+| `CORS_ORIGINS` | 許可するオリジン（JSON配列またはカンマ区切り） | `["http://localhost:5173","http://localhost:3000"]` |

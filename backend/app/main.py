@@ -1,21 +1,29 @@
+"""Main FastAPI application."""
+
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.v1.auth import router as auth_router
 from app.core.config import settings
 from app.core.database import init_db, close_db
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # 起動時の処理
-    print("Smart Office AI Backend starting...")
-    # データベース拡張の初期化（pgvector, uuid-ossp）
+    """Application lifespan management."""
+    # Startup
+    logger.info("Smart Office AI Backend starting...")
+    # Initialize database extensions (pgvector, uuid-ossp)
     await init_db()
     yield
-    # シャットダウン時の処理
-    print("Smart Office AI Backend shutting down...")
+    # Shutdown
+    logger.info("Smart Office AI Backend shutting down...")
     await close_db()
 
 
@@ -26,10 +34,10 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS設定
+# CORS configuration - allow origins from environment variable
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -38,9 +46,19 @@ app.add_middleware(
 
 @app.get("/health")
 async def health_check():
+    """Health check endpoint."""
     return {"status": "ok"}
 
 
 @app.get("/")
 async def root():
-    return {"message": "Smart Office AI API", "version": "0.1.0", "docs": "/docs"}
+    """Root endpoint with API information."""
+    return {
+        "message": "Smart Office AI API",
+        "version": "0.1.0",
+        "docs": "/docs",
+    }
+
+
+# Include API routers
+app.include_router(auth_router, prefix="/api/v1")

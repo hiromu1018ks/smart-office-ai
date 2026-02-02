@@ -76,7 +76,7 @@ services:
       - "5173:5173"
     volumes:
       - ./frontend:/app
-      - /app/node_modules
+      # Note: /app/node_modules anonymous volume removed to use local node_modules
     environment:
       - VITE_API_URL=${VITE_API_URL:-http://localhost:8000}
 

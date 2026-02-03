@@ -5,6 +5,7 @@ import { UserMenu } from '@/components/common/UserMenu'
 import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { useAuthStore } from '@/stores/authStore'
 
 interface HeaderProps {
   className?: string
@@ -14,13 +15,25 @@ interface HeaderProps {
 
 /**
  * Application header component.
+ *
  * Contains logo, search bar, theme toggle, notifications, and user menu.
+ * Uses the auth store to get real user data and handle logout.
  */
 export function Header({
   className,
   onMobileMenuClick,
   showMobileMenuButton = false,
 }: HeaderProps) {
+  const { user, logout } = useAuthStore()
+
+  // Create user object for UserMenu from auth store
+  const userMenuUser = user
+    ? {
+        name: user.username,
+        email: user.email,
+      }
+    : undefined
+
   return (
     <header
       className={cn(
@@ -57,12 +70,7 @@ export function Header({
             </span>
           </Button>
 
-          <UserMenu
-            user={{
-              name: 'Demo User',
-              email: 'demo@example.com',
-            }}
-          />
+          <UserMenu user={userMenuUser} onLogout={logout} />
         </div>
       </div>
     </header>

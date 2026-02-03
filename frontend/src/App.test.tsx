@@ -1,5 +1,24 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
+
+// Mock the auth store BEFORE importing App
+const mockAuthStore = {
+  user: null,
+  token: null,
+  isAuthenticated: false,
+  isLoading: false,
+  error: null,
+  login: vi.fn(),
+  logout: vi.fn(),
+  fetchUser: vi.fn(),
+  clearError: vi.fn(),
+  checkAuth: vi.fn().mockResolvedValue(undefined),
+}
+
+vi.mock('@/stores/authStore', () => ({
+  useAuthStore: vi.fn(() => mockAuthStore),
+}))
+
 import { App } from './App'
 
 /**
@@ -7,6 +26,18 @@ import { App } from './App'
  * Verifies that the application renders without crashing.
  */
 describe('App', () => {
+  beforeEach(() => {
+    // Reset to default unauthenticated state
+    Object.assign(mockAuthStore, {
+      user: null,
+      token: null,
+      isAuthenticated: false,
+      isLoading: false,
+      error: null,
+    })
+    vi.clearAllMocks()
+  })
+
   it('renders the application', () => {
     render(<App />)
 
@@ -22,11 +53,12 @@ describe('App', () => {
     expect(rootDiv).toBeDefined()
   })
 
-  it('displays navigation items', () => {
+  it('shows login page when not authenticated', () => {
     render(<App />)
 
-    // Verify navigation is rendered
-    expect(screen.getAllByText('Dashboard').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Chat').length).toBeGreaterThan(0)
+    // Should show login page when not authenticated
+    expect(screen.getByText(/welcome back/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/email/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/password/i)).toBeInTheDocument()
   })
 })

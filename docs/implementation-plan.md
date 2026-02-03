@@ -22,7 +22,8 @@
 **完了サマリー**:
 - Step 1-5: 完了（2025-02-02現在）
 - Step 6: 完了（2026-02-02）- Magic UI導入と基本レイアウト
-- Step 7-10: 未着手
+- Step 7: 完了（2026-02-03）- 認証フロントエンド（ログイン画面）
+- Step 8-10: 未着手
 
 ---
 
@@ -311,28 +312,80 @@ smart-office-ai/
 
 **実行内容**:
 
-1. **APIクライアント設定** (`lib/api.ts`)
-   - axiosまたはfetchのラッパー
+1. **APIクライアント設定** (`lib/api.ts`, `lib/types.ts`)
+   - axiosインスタンス（JWTインターセプター付き）
    - JWTトークンの自動付与
-   - エラーハンドリング
+   - エラーハンドリング（401で自動クリア）
 
 2. **認証状態管理** (`stores/authStore.ts`)
    - Zustandでログイン状態管理
-   - トークンの永続化（localStorage）
+   - トークンの永続化（localStorage、persistミドルウェア）
 
 3. **ログイン画面** (`pages/Login.tsx`)
    - メール/パスワード入力フォーム
-   - 2FA入力フォーム（TOTP）
-   - バリデーション
+   - 2FA入力フォーム（TOTP、エラーメッセージで動的表示）
+   - バリデーション（HTML5 + React state）
 
-4. **認証ガード**
+4. **認証ガード** (`pages/ProtectedRoute.tsx`)
    - 未ログイン時のリダイレクト
-   - トークン有効期限チェック
+   - トークン有効期限チェック（checkAuth）
+
+5. **ヘッダー統合** (`components/layout/Header.tsx`, `components/common/UserMenu.tsx`)
+   - ログアウト機能
+   - ユーザー情報表示
 
 **確認ポイント**:
-- [ ] ログインフォームでバックエンドAPIと通信できる
-- [ ] ログイン成功でJWTが保存される
-- [ ] ログイン状態でナビゲーションが変わる
+- [x] ログインフォームでバックエンドAPIと通信できる
+- [x] ログイン成功でJWTが保存される
+- [x] ログイン状態でナビゲーションが変わる
+
+**Step 7 完了日**: 2026-02-03
+**実装内容**:
+- APIクライアント（Axios + JWTインターセプター）
+- 認証ストア（Zustand + persist、トークンのみ永続化）
+- ログインページ（フォーム送信、TOTP動的表示、エラー表示）
+- ProtectedRoute（本実装の認証チェック、ローディング状態）
+- Header/UserMenu（ユーザー情報表示、ログアウト）
+- 109個のテスト全て通過、80.3%カバレッジ達成
+
+**Step 7 セキュリティ技術的負債（リファクタリング計画）:**
+
+以下の問題はPhase 1完了後のリファクタリングで対応予定。
+
+| 重要度 | 問題 | ファイル | 説明 |
+|--------|------|--------|------|
+| CRITICAL | localStorage JWT保存 | api.ts, authStore.ts | XSSでトークン盗聴リスク。httpOnlyクッキーへ移行検討 |
+| CRITICAL | CSP未設定 | index.html | XSS防御がない。Caddyでセキュリティヘッダー設定 |
+| CRITICAL | ユーザー列挙攻撃 | api.ts | エラーメッセージでユーザー存在が分かる。バックエンド含めて対応 |
+| HIGH | rememberMe未実装 | Login.tsx:24 | チェックボックスが機能しない。実装または削除 |
+| HIGH | eslint-disable乱用 | shiny-button.tsx, authStore.ts | 型安全性を無視。適切な型定義へ |
+| HIGH | TOTP平文表示 | Login.tsx:122 | type="password"へ変更 |
+| HIGH | HTTPS強制なし | vite.config.ts | 本番環境でHTTPS強制 |
+| HIGH | checkAuth競合 | ProtectedRoute.tsx:17 | 複数呼び出しの重複排除 |
+| MEDIUM | トークンリフレッシュなし | api.ts | 有効期限前にリフレッシュ |
+| MEDIUM | セキュリティヘッダー不足 | Caddyfile | X-Frame-Options等追加 |
+| MEDIUM | パスワードstate残留 | Login.tsx:22 | 送信後即時クリア |
+
+**Phase 1完了後のセキュリティ強化タスク:**
+
+1. **httpOnlyクッキー移行**（バックエンド変更含む）
+   - バックエンド: Set-CookieヘッダーでJWT発行
+   - フロントエンド: credentials: 'include' でAPI呼び出し
+   - localStorageからのトークン削除
+
+2. **Caddyセキュリティヘッダー設定**
+   ```caddy
+   header {
+       Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline';"
+       X-Frame-Options "DENY"
+       X-Content-Type-Options "nosniff"
+       Referrer-Policy "strict-origin-when-cross-origin"
+   }
+   ```
+
+3. **rememberMe 実装または削除**
+   - 削除案: チェックボックスUIを削除
+   - 実装案: バックエンドで長期有効トークン発行
 
 ---
 

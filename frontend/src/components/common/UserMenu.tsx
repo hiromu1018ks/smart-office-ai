@@ -17,12 +17,16 @@ interface UserMenuProps {
     email?: string
     avatar?: string
   }
+  onLogout?: () => void
 }
 
 /**
  * User dropdown menu component.
+ *
+ * Displays user information and provides menu options for
+ * profile, settings, and logout.
  */
-export function UserMenu({ className, user }: UserMenuProps) {
+export function UserMenu({ className, user, onLogout }: UserMenuProps) {
   const initials = user?.name
     ? user.name
         .split(' ')
@@ -31,6 +35,10 @@ export function UserMenu({ className, user }: UserMenuProps) {
         .toUpperCase()
         .slice(0, 2)
     : 'U'
+
+  const handleLogout = () => {
+    onLogout?.()
+  }
 
   return (
     <DropdownMenu>
@@ -69,7 +77,10 @@ export function UserMenu({ className, user }: UserMenuProps) {
           Settings
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="text-destructive">
+        <DropdownMenuItem
+          className="text-destructive"
+          onClick={handleLogout}
+        >
           <LogOut className="mr-2 h-4 w-4" />
           Log out
         </DropdownMenuItem>

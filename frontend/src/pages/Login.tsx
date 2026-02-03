@@ -1,13 +1,56 @@
-import { Link } from 'react-router'
+import { useState, type FormEvent } from 'react'
+import { Link, useNavigate } from 'react-router'
 import { ShinyButton } from '@/components/ui/shiny-button'
 import { MagicCard } from '@/components/ui/magic-card'
 import { Logo } from '@/components/common/Logo'
+import { useAuthStore } from '@/stores/authStore'
+import { isTOTPRequiredError } from '@/lib/api'
 import { APP_NAME, APP_DESCRIPTION } from '@/lib/constants'
 
 /**
  * Login page component.
+ *
+ * Handles user authentication with email/password and optional TOTP.
+ * Displays error messages and loading states from auth store.
  */
 export function Login() {
+  const navigate = useNavigate()
+  const { login, isLoading, error, clearError } = useAuthStore()
+
+  // Form state
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [totpCode, setTotpCode] = useState('')
+  const [rememberMe, setRememberMe] = useState(false)
+
+  // Check if TOTP is required (based on error message)
+  const isTotpRequired = error != null && isTOTPRequiredError(error)
+
+  /**
+   * Handle form submission.
+   * Validates input and calls auth store login action.
+   */
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+
+    // Clear any previous errors
+    clearError()
+
+    // Call login with credentials
+    try {
+      await login({
+        email,
+        password,
+        totp_code: isTotpRequired ? totpCode || undefined : undefined,
+      })
+
+      // Navigate to dashboard on successful login
+      navigate('/')
+    } catch {
+      // Error is handled by auth store
+    }
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/40 p-4">
       <div className="w-full max-w-md space-y-8">
@@ -22,7 +65,17 @@ export function Login() {
 
         {/* Login Form */}
         <MagicCard className="p-6">
-          <form className="space-y-6">
+          {/* Error Display */}
+          {error && (
+            <div
+              role="alert"
+              className="mb-4 rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
+            >
+              {error}
+            </div>
+          )}
+
+          <form className="space-y-6" onSubmit={handleSubmit}>
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium">
                 Email
@@ -30,9 +83,13 @@ export function Login() {
               <input
                 id="email"
                 type="email"
+                name="email"
                 placeholder="name@example.com"
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
                 required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
               />
             </div>
 
@@ -43,15 +100,54 @@ export function Login() {
               <input
                 id="password"
                 type="password"
+                name="password"
                 placeholder="••••••••"
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
                 required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
               />
             </div>
 
+            {/* TOTP Input (shown when required) */}
+            {isTotpRequired && (
+              <div className="space-y-2">
+                <label htmlFor="totp" className="text-sm font-medium">
+                  Two-Factor Authentication
+                </label>
+                <p className="text-xs text-muted-foreground">
+                  Enter the 6-digit code from your authenticator app.
+                </p>
+                <input
+                  id="totp"
+                  type="text"
+                  name="totp"
+                  placeholder="123456"
+                  pattern="[0-9]{6}"
+                  maxLength={6}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                  value={totpCode}
+                  onChange={(e) => {
+                    // Only allow digits
+                    const value = e.target.value.replace(/\D/g, '')
+                    setTotpCode(value)
+                  }}
+                  disabled={isLoading}
+                  autoFocus
+                />
+              </div>
+            )}
+
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" className="rounded border-input" />
+                <input
+                  type="checkbox"
+                  className="rounded border-input"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  disabled={isLoading}
+                />
                 Remember me
               </label>
               <Link
@@ -62,8 +158,12 @@ export function Login() {
               </Link>
             </div>
 
-            <ShinyButton type="submit" className="w-full">
-              Sign in
+            <ShinyButton
+              type="submit"
+              className="w-full"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Signing in...' : 'Sign in'}
             </ShinyButton>
           </form>
 

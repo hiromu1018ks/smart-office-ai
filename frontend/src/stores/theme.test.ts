@@ -1,11 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { useThemeStore } from './theme'
 
 // Mock matchMedia for system theme detection
 const matchMediaMock = vi.fn()
-Object.defineProperty(window, 'matchMedia', {
-  value: matchMediaMock,
+vi.stubGlobal('window', {
+  matchMedia: matchMediaMock,
 })
+
+import { useThemeStore } from './theme'
 
 describe('useThemeStore', () => {
   beforeEach(() => {

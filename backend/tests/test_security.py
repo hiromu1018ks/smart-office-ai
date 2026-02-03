@@ -11,7 +11,8 @@ from typing import AsyncGenerator
 import pytest
 import pytest_asyncio
 from fastapi import Depends, HTTPException, status
-from jose import JWTError
+import jwt
+from jwt import PyJWTError as JWTError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db

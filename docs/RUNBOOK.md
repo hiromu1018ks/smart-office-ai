@@ -85,6 +85,10 @@ docker compose -f docker-compose.yml down
 curl https://your-domain.com/health
 # 期待されるレスポンス: {"status":"ok"}
 
+# AIサービスヘルスチェック
+curl https://your-domain.com/api/v1/ai/health
+# 期待されるレスポンス: {"status":"healthy","ollama_reachable":true}
+
 # データベース接続チェック
 docker-compose exec backend python -c "from app.core.database import init_db; import asyncio; asyncio.run(init_db())"
 ```
@@ -101,6 +105,10 @@ docker compose ps postgres
 docker compose ps redis
 docker compose ps ollama
 docker compose ps caddy
+
+# AIサービスヘルスチェック
+curl http://localhost:8000/api/v1/ai/health
+curl http://localhost:8000/api/v1/ai/models
 
 # リソース使用状況
 docker stats
@@ -227,7 +235,7 @@ docker-compose logs ollama --tail=50
 docker compose restart ollama
 
 # モデルの再プル
-docker compose exec ollama ollama pull llama3.2
+docker compose exec ollama ollama pull gemma3:12b
 ```
 
 ---

@@ -213,7 +213,8 @@ curl http://localhost:8000/api/v1/health
 | 変数名 | 用途 | デフォルト/形式 |
 |--------|------|----------------|
 | `OLLAMA_BASE_URL` | Ollama API エンドポイント | `http://ollama:11434` |
-| `OLLAMA_MODEL` | デフォルトモデル名 | `llama3.2` |
+| `OLLAMA_MODEL` | デフォルトモデル名 | `gemma3:12b` |
+| `OLLAMA_TIMEOUT` | リクエストタイムアウト（秒） | `120` |
 
 ### Caddy 設定
 
@@ -410,7 +411,7 @@ POSTGRES_PORT=5433
 
 A: モデルをダウンロードしてください：
 ```bash
-docker-compose exec ollama ollama pull llama3.2
+docker-compose exec ollama ollama pull gemma3:12b
 ```
 
 ### Q: マイグレーションが失敗しました

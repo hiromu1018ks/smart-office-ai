@@ -16,14 +16,15 @@
 - [x] データベース（PostgreSQL + pgvector）のセットアップ
 - [x] 認証基盤（JWT + TOTP）の実装
 - [x] 基本UIレイアウト（サイドバー、ヘッダー）
-- [ ] Ollama連携（ローカルLLMとの通信）
+- [x] Ollama連携（ローカルLLMとの通信）
 - [ ] 基本チャットUI（メッセージの送受信）
 
 **完了サマリー**:
 - Step 1-5: 完了（2025-02-02現在）
 - Step 6: 完了（2026-02-02）- Magic UI導入と基本レイアウト
 - Step 7: 完了（2026-02-03）- 認証フロントエンド（ログイン画面）
-- Step 8-10: 未着手
+- Step 8: 完了（2026-02-03）- Ollama連携（バックエンド）
+- Step 9-10: 未着手
 
 ---
 
@@ -415,9 +416,19 @@ smart-office-ai/
    - docker-composeで指定モデルの自動pull
 
 **確認ポイント**:
-- [ ] `http://localhost:11434` でOllamaが応答する
-- [ ] `/api/v1/ai/models` でモデル一覧が取得できる
-- [ ] `/api/v1/ai/chat` でAI応答が返る
+- [x] `http://localhost:11434` でOllamaが応答する
+- [x] `/api/v1/ai/models` でモデル一覧が取得できる
+- [x] `/api/v1/ai/chat` でAI応答が返る
+
+**Step 8 完了日**: 2026-02-03
+**実装内容**:
+- Ollama Pythonライブラリ（ollama>=0.4.0）を使用したLLMサービス
+- `OllamaClient` クラス（health_check, list_models, chat, chat_stream）
+- AI APIエンドポイント（GET /api/v1/ai/models, POST /api/v1/ai/chat, POST /api/v1/ai/chat/stream, GET /api/v1/ai/health）
+- Pydanticスキーマ（ChatMessage, ChatRequest, ChatResponse, ModelInfo, HealthResponse, StreamChunk）
+- カスタム例外（OllamaServiceError, OllamaConnectionError, OllamaModelNotFoundError, OllamaTimeoutError）
+- Docker Compose healthcheck追加（ollama service）
+- 70個のテスト全て通過、96%カバレッジ（services/ai）
 
 ---
 

@@ -551,7 +551,7 @@ class TestGetCurrentUserDep:
         from fastapi import HTTPException
 
         # Create token without sub claim
-        from jose import jwt
+        import jwt
         token = jwt.encode({"email": "test@example.com"}, "secret", algorithm="HS256")
 
         credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)

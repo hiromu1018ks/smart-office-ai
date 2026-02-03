@@ -1,5 +1,4 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import List
 
 
 class Settings(BaseSettings):
@@ -17,9 +16,11 @@ class Settings(BaseSettings):
 
     # AI
     OLLAMA_BASE_URL: str = "http://ollama:11434"
+    OLLAMA_MODEL: str = "gemma3:12b"
+    OLLAMA_TIMEOUT: int = 120
 
     # CORS
-    CORS_ORIGINS: List[str] = [
+    CORS_ORIGINS: list[str] = [
         "http://localhost:5173",
         "http://localhost:3000",
     ]

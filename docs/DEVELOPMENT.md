@@ -139,6 +139,47 @@ fix/*         - バグ修正ブランチ
 | POST | `/api/v1/auth/2fa/verify` | 必須 | TOTPコード検証 |
 | GET | `/api/v1/auth/me` | 必須 | 現在のユーザー情報取得 |
 
+## チャットAPIエンドポイント
+
+### チャット機能概要
+
+AIチャットは Server-Sent Events (SSE) ストリーミングでリアルタイム応答を提供します。ローカルLLM（Ollama）と連携し、Markdown形式の応答をサポートします。
+
+### APIエンドポイント一覧
+
+| メソッド | パス | 認証 | 説明 |
+|--------|------|------|------|
+| POST | `/api/v1/ai/chat/stream` | 必須 | SSEストリーミングチャット |
+| GET | `/api/v1/ai/models` | 必須 | 利用可能なモデル一覧 |
+| GET | `/api/v1/ai/health` | 不要 | AIサービスヘルスチェック |
+
+### SSEストリーミング形式
+
+```typescript
+// Server-Sent Events レスポンス形式
+data: {"content":"Hello","model":"llama3.2","done":false}
+data: {"content":"!","model":"llama3.2","done":false}
+data: {"content":"","model":"llama3.2","done":true}
+```
+
+### cURL使用例
+
+```bash
+# チャットメッセージ送信（SSEストリーミング）
+curl -X POST http://localhost:8000/api/v1/ai/chat/stream \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"messages":[{"role":"user","content":"Hello"}],"model":"llama3.2"}'
+
+# モデル一覧取得
+curl -X GET http://localhost:8000/api/v1/ai/models \
+  -H "Authorization: Bearer <token>"
+
+# ヘルスチェック
+curl -X GET http://localhost:8000/api/v1/ai/health
+# 期待されるレスポンス: {"status":"healthy","ollama_reachable":true}
+```
+
 ### cURL使用例
 
 ```bash
@@ -217,6 +258,78 @@ docker-compose exec frontend npm run dev     # 開発サーバー起動
 docker-compose exec frontend npm run build   # プロダクションビルド
 docker-compose exec frontend npm run test    # テスト実行
 docker-compose exec frontend npm run lint    # Lint実行
+docker-compose exec frontend npm run type-check  # TypeScript型チェック
+docker-compose exec frontend npm run test:ui     # UI付きテスト
+docker-compose exec frontend npm run test:coverage  # カバレッジ計測
+```
+
+### フロントエンドアーキテクチャ
+
+#### 状態管理 (Zustand)
+
+グローバル状態は Zustand ストアで管理します：
+
+| ストア | ファイル | 責務 |
+|--------|---------|------|
+| `authStore` | `stores/authStore.ts` | 認証状態、ユーザー情報、TOTP設定 |
+| `chatStore` | `stores/chatStore.ts` | チャットメッセージ、会話履歴、ストリーミング状態 |
+| `theme` | `stores/theme.ts` | ダークモード設定 |
+
+```typescript
+// chatStore 使用例
+import { useChatStore } from '@/stores/chatStore'
+
+function ChatPage() {
+  const { messages, sendMessage, isStreaming } = useChatStore()
+  // ...
+}
+```
+
+#### カスタムフック
+
+再利用可能なロジックはカスタムフックとして抽出：
+
+| フック | ファイル | 説明 |
+|--------|---------|------|
+| `useAutoScroll` | `hooks/useAutoScroll.ts` | チャットメッセージの自動スクロール（ユーザースクロール時は無効） |
+| `useTheme` | `hooks/useTheme.ts` | ダークモード切替 |
+
+#### チャットコンポーネント構成
+
+```
+components/chat/
+├── ChatMessage.tsx      # メッセージ1件（Markdown対応、コードハイライト）
+├── ChatInput.tsx        # 入力欄（自動リサイズ、Enter送信）
+├── MessageList.tsx      # メッセージリスト（スクロール管理）
+└── TypingIndicator.tsx  # タイピングインジケーター（アニメーション）
+```
+
+#### 依存パッケージ (Step 9追加)
+
+```json
+{
+  "react-markdown": "^10.1.0",     // Markdownレンダリング
+  "remark-gfm": "^4.0.1",           // GitHub Flavored Markdown
+  "rehype-highlight": "^7.0.2"     // コードブロックシンタックスハイライト
+}
+```
+
+#### APIクライアント
+
+チャットAPIはSSEストリーミング対応：
+
+```typescript
+import { sendMessageStream } from '@/lib/chat-api'
+
+// ストリーミングチャット
+const result = await sendMessageStream([
+  { role: 'user', content: 'Hello' }
+])
+
+for await (const chunk of result.streamChunks()) {
+  console.log(chunk.content)  // ストリーミング受信
+  if (chunk.done) break
+}
 ```
 
 ---
@@ -394,11 +507,28 @@ smart-office-ai/
 │   └── Dockerfile
 ├── frontend/                  # フロントエンド（React）
 │   ├── src/
-│   │   ├── components/       # React コンポーネント
-│   │   ├── pages/            # 画面コンポーネント
-│   │   ├── hooks/            # カスタムフック
-│   │   ├── lib/              # ユーティリティ
-│   │   └── stores/           # 状態管理
+│   │   ├── components/
+│   │   │   ├── ui/          # Magic UI 基本コンポーネント
+│   │   │   ├── layout/      # レイアウトコンポーネント（Header, Sidebar）
+│   │   │   ├── chat/        # チャットコンポーネント
+│   │   │   │   ├── ChatMessage.tsx      # メッセージ表示
+│   │   │   │   ├── ChatInput.tsx        # 入力欄
+│   │   │   │   ├── MessageList.tsx      # メッセージリスト
+│   │   │   │   └── TypingIndicator.tsx  # タイピング中表示
+│   │   │   └── common/      # 共通コンポーネント
+│   │   ├── pages/           # 画面コンポーネント（Chat, Login, Dashboard）
+│   │   ├── hooks/           # カスタムフック
+│   │   │   ├── useAutoScroll.ts      # 自動スクロール
+│   │   │   └── useTheme.ts           # テーマ切替
+│   │   ├── lib/             # ユーティリティ
+│   │   │   ├── api.ts                # Axios APIクライアント
+│   │   │   ├── chat-api.ts           # チャットAPI（SSE対応）
+│   │   │   ├── types-chat.ts         # チャット関連型定義
+│   │   │   └── utils.ts              # 共通関数
+│   │   └── stores/          # Zustand 状態管理
+│   │       ├── authStore.ts          # 認証状態
+│   │       ├── chatStore.ts          # チャット状態
+│   │       └── theme.ts              # テーマ状態
 │   ├── package.json
 │   └── Dockerfile
 ├── caddy/                     # Caddy 設定

@@ -44,6 +44,7 @@ export function UserMenu({ className, user, onLogout }: UserMenuProps) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
+          data-testid="user-menu-trigger"
           className={cn(
             'flex items-center gap-2 rounded-full border border-input bg-background px-2 py-1 hover:bg-accent',
             className
@@ -80,6 +81,7 @@ export function UserMenu({ className, user, onLogout }: UserMenuProps) {
         <DropdownMenuItem
           className="text-destructive"
           onClick={handleLogout}
+          data-testid="logout-button"
         >
           <LogOut className="mr-2 h-4 w-4" />
           Log out

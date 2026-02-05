@@ -466,10 +466,93 @@ smart-office-ai/
    - 現在の会話コンテキスト
 
 **確認ポイント**:
-- [ ] メッセージを入力して送信できる
-- [ ] AI応答がストリーミングで表示される
-- [ ] Markdownが正しくレンダリングされる
-- [ ] 長い応答でもスクロールが機能する
+- [x] メッセージを入力して送信できる
+- [x] AI応答がストリーミングで表示される
+- [x] Markdownが正しくレンダリングされる
+- [x] 長い応答でもスクロールが機能する
+
+**Step 9 完了日**: 2026-02-04
+**実装内容**:
+- チャットメッセージコンポーネント（Markdown、コードブロック対応）
+- チャット入力コンポーネント（自動リサイズ、Enter送信、Shift+Enter改行）
+- チャット画面（メッセージ一覧、ストリーミング応答、ローディング状態）
+- チャットストア（会話履歴管理、現在の会話コンテキスト）
+- 88.29%カバレッジ達成
+
+---
+
+### Step 9.5: テスト偽陽性修正（発見済みバグの修正）
+
+**目的**: テストが通っているのに実際の動作がしない問題を修正
+
+| 項目 | 内容 |
+|------|------|
+| **対象ファイル** | `backend/app/services/ai/llm_service.py`, `backend/tests/test_llm_service.py` |
+| **所要時間目安** | 2-3時間 |
+| **依存関係** | Step 9完了後 |
+
+**発見されたバグ**:
+
+統合テスト（実Ollama使用）実行時に発見されたバグ：
+
+| バグ | 箇所 | 内容 |
+|------|------|------|
+| `chat_stream` await誤り | `llm_service.py:199` | `stream=True`時、`await`してはいけない |
+| モックがバグを隠蔽 | `test_llm_service.py` | 過剰なモッキングで実装バグを検知できなかった |
+
+**実行内容**:
+
+1. **`chat_stream`メソッドの修正**
+
+   現在のバグコード（`llm_service.py:199`）:
+   ```python
+   stream = await self._client.chat(  # ← awaitが不要
+       model=chat_model,
+       messages=messages_dicts,
+       options=options if options else None,
+       stream=True,
+   )
+   ```
+
+   修正後:
+   ```python
+   stream = self._client.chat(  # stream=True時はgeneratorを直接返す
+       model=chat_model,
+       messages=messages_dicts,
+       options=options if options else None,
+       stream=True,
+   )
+   ```
+
+2. **テストの改善**
+
+   - モックを修正して実際のAPI挙動に合わせる
+   - 統合テストのカバレッジ向上（`test_llm_service_integration.py`）
+
+3. **偽陽性防止策の適用**
+
+   - モックは外部境界でのみ使用
+   - 実際のOllama通信を検証する統合テストを実行
+
+**確認ポイント**:
+- [x] `make test-integration` で全ての統合テストが通る
+- [x] 実際のOllamaと通信してチャットができる
+- [x] ストリーミング応答が正しく表示される
+
+**Step 9.5 完了日**: 2026-02-05
+**実装内容**:
+- モックを実際のollamaライブラリの挙動に合わせて修正
+- `SimpleNamespace`を使用してModelオブジェクトを正しくモック
+- `AsyncMock`を正しく使用してcoroutineをモック
+- ユニットテスト20個全て通過
+- 統合テスト9個全て通過（実Ollama使用）
+
+**学んだ教訓**:
+- モック過剰使用は実装バグを隠す
+- 統合テスト（実サービス使用）が必須
+- テストが通っても実動作を確認する（TDDの「実装を壊して検証」ステップ）
+- ollamaライブラリの`chat()`と`list()`はcoroutineを返す
+- ollamaのModelオブジェクトは`model`属性を持つ（`name`ではない）
 
 ---
 

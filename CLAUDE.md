@@ -174,8 +174,154 @@ Copy `.env.example` to `.env` and configure:
 
 ## Testing Strategy
 
-- **Backend**: pytest with async support, 80%+ coverage required
-- **Frontend**: Vitest + Playwright for E2E
-- **E2E**: Critical user flows (login → chat → file upload → AI query)
+### Test Types
+- **Unit Tests**: Test individual functions/components in isolation
+- **Integration Tests**: Test actual communication with external services
+- **E2E Tests**: Playwright tests for critical user flows
 
-Always write tests FIRST (TDD) for new features.
+### Coverage Target: 80%+
+
+### ⚠️ ANTI-PATTERN: Test False Positives
+
+**Problem**: Tests that pass but don't verify actual behavior.
+
+| Anti-Pattern | Example | Why It Fails |
+|-------------|---------|--------------|
+| **Hardcoded value tests** | `expect(screen.getByText('24'))` | Tests match hardcoded values in component, not dynamic data |
+| **Over-mocking** | Mocking `ollama.AsyncClient` at lowest level | Can't detect integration bugs; mock bugs hide real bugs |
+| **Superficial assertions** | `expect(mockFn).toHaveBeenCalled()` | Doesn't verify correct parameters or side effects |
+| **State unchanged checks** | Only checking localStorage was called | Doesn't verify axios headers actually set |
+
+### Best Practices to Avoid False Positives
+
+#### 1. Test the Contract, Not Implementation Details
+
+**BAD:**
+```typescript
+// Dashboard.test.tsx - Tests hardcoded values
+expect(screen.getByText('24')).toBeInTheDocument()
+expect(screen.getByText('Activity 1')).toBeInTheDocument()
+```
+
+**GOOD:**
+```typescript
+// Use data-testid for behavior verification
+expect(screen.getByTestId('stat-card-messages')).toBeInTheDocument()
+// For future dynamic data, use contract tests (skip until implemented)
+describe.skip('Data Contract', () => {
+  it('should render stats from props', () => {
+    render(<Dashboard stats={mockStats} />)
+    expect(screen.getByText('99')).toBeInTheDocument()
+  })
+})
+```
+
+#### 2. Write Integration Tests for External Services
+
+**BAD:**
+```python
+# test_llm_service.py - Mocking at lowest level
+with patch('ollama.AsyncClient') as mock_client:
+    mock_client.chat.return_value = mock_response
+    # This can't detect API changes or integration bugs
+```
+
+**GOOD:**
+```python
+# test_llm_service_integration.py - Real Ollama communication
+@pytest.mark.integration
+async def test_real_chat(real_client):
+    if not await real_client.health_check():
+        pytest.skip("Ollama not available")
+    response = await real_client.chat(messages, model="gemma3:12b")
+    assert response.message.content  # Actual Ollama response
+```
+
+Run with: `make test-integration`
+
+#### 3. Verify Actual Behavior, Not Mock Calls
+
+**BAD:**
+```typescript
+// api.test.ts - Only checks localStorage was called
+expect(localStorageMock.setItem).toHaveBeenCalledWith('soai-token', token)
+```
+
+**GOOD:**
+```typescript
+// Verify axios headers are actually set
+setToken('test-token')
+expect(api.defaults.headers.common.Authorization).toBe('Bearer test-token')
+// Or use MSW to verify actual HTTP requests
+```
+
+#### 4. Use MSW for Frontend Integration Tests
+
+```typescript
+// Chat.integration.test.tsx
+import { http, HttpResponse } from 'msw'
+import { setupServer } from 'msw/node'
+
+const server = setupServer(
+  http.post('/api/v1/ai/chat', async ({ request }) => {
+    const body = await request.json()
+    // Verify request structure
+    return HttpResponse.json({ message: { content: body.messages[0].content } })
+  })
+)
+```
+
+#### 5. E2E Tests for Critical Flows
+
+```typescript
+// e2e/chat.spec.ts - Tests actual user behavior
+test('user can send message and receive response', async ({ page }) => {
+  await page.goto('/chat')
+  await page.fill('[data-testid="chat-input"]', 'Hello')
+  await page.press('[data-testid="chat-input"]', 'Enter')
+  await expect(page.locator('[data-testid="chat-message-assistant"]')).toBeVisible()
+})
+```
+
+### Test File Organization
+
+```
+backend/tests/
+├── test_<module>.py           # Unit tests (mocked)
+├── test_<module>_integration.py # Integration tests (real services)
+└── conftest.py                 # Shared fixtures
+
+frontend/
+├── src/
+│   ├── *.test.tsx              # Unit tests
+│   └── *.integration.test.tsx  # MSW integration tests
+└── e2e/
+    └── *.spec.ts               # Playwright E2E tests
+```
+
+### TDD Workflow
+
+1. **Write test first** - Test should FAIL
+2. **Run test** - Confirm it fails (RED)
+3. **Implement** - Make test pass (GREEN)
+4. **Break implementation** - Confirm test catches bugs (not a false positive!)
+5. **Fix and verify** - Test passes again
+
+### Running Tests
+
+```bash
+# Unit tests only (fast, no external services)
+make test-unit
+
+# Integration tests (requires Ollama running)
+make test-integration
+
+# All tests
+make test-all
+
+# Frontend unit tests
+npm run test
+
+# Frontend E2E tests
+npm run test:e2e
+```

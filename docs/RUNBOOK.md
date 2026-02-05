@@ -234,8 +234,11 @@ docker-compose logs ollama --tail=50
 # Ollama コンテナの再起動
 docker compose restart ollama
 
-# モデルの再プル
+# モデルの再プル（デフォルト: gemma3:12b）
 docker compose exec ollama ollama pull gemma3:12b
+
+# 利用可能なモデルを確認
+docker compose exec ollama ollama list
 ```
 
 ---

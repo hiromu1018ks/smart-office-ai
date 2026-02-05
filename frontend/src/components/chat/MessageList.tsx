@@ -39,7 +39,7 @@ export function MessageList({ messages, className }: MessageListProps) {
 
   if (messages.length === 0) {
     return (
-      <div className={cn('flex items-center justify-center', className)}>
+      <div className={cn('flex items-center justify-center', className)} data-testid="empty-chat-state">
         <div className="text-center text-muted-foreground">
           <p className="text-lg font-medium">Start a conversation</p>
           <p className="mt-2 text-sm">Ask questions, get help with tasks, or brainstorm ideas</p>
@@ -52,6 +52,7 @@ export function MessageList({ messages, className }: MessageListProps) {
     <div
       ref={containerRef}
       className={cn('flex flex-col gap-4 overflow-y-auto', className)}
+      data-testid="message-list"
     >
       {messages.map((message) => (
         <ChatMessage key={message.id} message={message} />

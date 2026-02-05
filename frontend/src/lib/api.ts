@@ -300,6 +300,9 @@ export function isTOTPRequiredError(error: unknown): boolean {
  * Extract error message from API error or return default.
  */
 export function getErrorMessage(error: unknown, defaultMessage = 'An error occurred'): string {
+  if (!error) {
+    return defaultMessage
+  }
   const axiosError = error as AxiosError<ApiError>
   return axiosError.response?.data?.detail ||
     axiosError.message ||

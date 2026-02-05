@@ -64,18 +64,19 @@ export function Login() {
         </div>
 
         {/* Login Form */}
-        <MagicCard className="p-6">
+        <MagicCard className="p-6" data-testid="login-form">
           {/* Error Display */}
           {error && (
             <div
               role="alert"
+              data-testid="login-error"
               className="mb-4 rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive"
             >
               {error}
             </div>
           )}
 
-          <form className="space-y-6" onSubmit={handleSubmit}>
+          <form className="space-y-6" onSubmit={handleSubmit} data-testid="login-form-element">
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium">
                 Email
@@ -84,6 +85,7 @@ export function Login() {
                 id="email"
                 type="email"
                 name="email"
+                data-testid="login-email"
                 placeholder="name@example.com"
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
                 required
@@ -101,6 +103,7 @@ export function Login() {
                 id="password"
                 type="password"
                 name="password"
+                data-testid="login-password"
                 placeholder="••••••••"
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
                 required
@@ -123,6 +126,7 @@ export function Login() {
                   id="totp"
                   type="text"
                   name="totp"
+                  data-testid="login-totp"
                   placeholder="123456"
                   pattern="[0-9]{6}"
                   maxLength={6}
@@ -143,6 +147,7 @@ export function Login() {
               <label className="flex items-center gap-2 text-sm">
                 <input
                   type="checkbox"
+                  data-testid="login-remember-me"
                   className="rounded border-input"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
@@ -152,6 +157,7 @@ export function Login() {
               </label>
               <Link
                 to="/forgot-password"
+                data-testid="login-forgot-password"
                 className="text-sm text-primary hover:underline"
               >
                 Forgot password?
@@ -162,6 +168,7 @@ export function Login() {
               type="submit"
               className="w-full"
               disabled={isLoading}
+              data-testid="login-submit"
             >
               {isLoading ? 'Signing in...' : 'Sign in'}
             </ShinyButton>
@@ -169,7 +176,7 @@ export function Login() {
 
           <div className="mt-6 text-center text-sm">
             <span className="text-muted-foreground">Don't have an account? </span>
-            <Link to="/register" className="text-primary hover:underline">
+            <Link to="/register" data-testid="login-signup" className="text-primary hover:underline">
               Sign up
             </Link>
           </div>

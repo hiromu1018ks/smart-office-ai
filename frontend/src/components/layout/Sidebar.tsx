@@ -19,6 +19,15 @@ function NavIcon({ iconName, className }: { iconName: string; className?: string
 }
 
 /**
+ * Helper to generate test-id from href
+ * e.g., '/chat' -> 'nav-chat', '/' -> 'nav-dashboard'
+ */
+function getNavTestId(href: string): string {
+  const path = href === '/' ? 'dashboard' : href.slice(1)
+  return `nav-${path}`
+}
+
+/**
  * Desktop navigation sidebar component.
  */
 export function Sidebar({ className, collapsed = false }: SidebarProps) {
@@ -39,6 +48,7 @@ export function Sidebar({ className, collapsed = false }: SidebarProps) {
           <NavLink
             key={item.href}
             to={item.href}
+            data-testid={getNavTestId(item.href)}
             className={({ isActive: isLinkActive }) =>
               cn(
                 'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',

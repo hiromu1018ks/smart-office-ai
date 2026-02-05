@@ -85,14 +85,15 @@ class OllamaClient:
         except Exception as exc:
             raise OllamaConnectionError(f"Failed to list models: {exc}") from exc
 
-        models = response.get("models", [])
+        # ollama library returns an object with .models attribute, not a dict
+        models = getattr(response, 'models', [])
         return [
             ModelInfo(
-                name=model.get("name", ""),
-                size=model.get("size"),
+                name=getattr(model, 'model', ''),
+                size=getattr(model, 'size', None),
             )
             for model in models
-            if model.get("name")  # Skip models with empty names
+            if getattr(model, 'model', None)  # Skip models with empty names
         ]
 
     async def chat(
@@ -194,7 +195,9 @@ class OllamaClient:
         messages_dicts = [msg.model_dump() for msg in messages]
 
         try:
-            stream = self._client.chat(
+            # ollama.AsyncClient.chat() always returns a coroutine
+            # When stream=True, awaiting it returns an async generator
+            stream = await self._client.chat(
                 model=chat_model,
                 messages=messages_dicts,
                 options=options if options else None,

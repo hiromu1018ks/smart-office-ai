@@ -88,6 +88,7 @@ export function ChatInput({
     <div className={cn('flex gap-2', className)}>
       <textarea
         ref={textareaRef}
+        data-testid="chat-input"
         value={content}
         onChange={(e) => setContent(e.target.value)}
         onKeyDown={handleKeyDown}
@@ -103,6 +104,7 @@ export function ChatInput({
         size="icon"
         className="h-9 w-9 shrink-0"
         aria-label="Send message"
+        data-testid="send-button"
       >
         <Send className="h-4 w-4" />
       </Button>

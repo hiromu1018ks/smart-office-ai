@@ -1,7 +1,17 @@
-"""Tests for LLM Service (TDD - RED phase).
+"""UNIT TESTS for OllamaClient (TDD - RED phase).
 
-This file tests the OllamaClient service before implementation.
-Tests should fail initially (RED), then pass after implementation (GREEN).
+This file tests the OllamaClient service behavior with mocked dependencies.
+These tests verify component logic, not actual Ollama communication.
+
+For integration tests with real Ollama service, see test_llm_service_integration.py
+
+Test Strategy:
+- Mock ollama.AsyncClient at the lowest level to test our wrapper logic
+- Verify timeout handling, error mapping, and parameter passing
+- Test streaming behavior with mock async generators
+
+Prerequisites:
+    - None (all dependencies are mocked)
 """
 
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -109,13 +119,15 @@ class TestOllamaClientListModels:
     @pytest.mark.asyncio
     async def test_list_models_success(self):
         """Test successful model listing."""
-        mock_response = {
-            "models": [
-                {"name": "gemma3:12b", "size": 7340032000},
-                {"name": "llama3.2", "size": 2000000000},
-                {"name": "qwen2.5", "size": 4600000000},
-            ]
-        }
+        # Create mock Model objects with 'model' attribute (not 'name')
+        # This matches ollama library's actual Model structure
+        from types import SimpleNamespace
+
+        mock_model1 = SimpleNamespace(model="gemma3:12b", size=7340032000)
+        mock_model2 = SimpleNamespace(model="llama3.2", size=2000000000)
+        mock_model3 = SimpleNamespace(model="qwen2.5", size=4600000000)
+
+        mock_response = SimpleNamespace(models=[mock_model1, mock_model2, mock_model3])
 
         mock_client = AsyncMock()
         mock_client.list = AsyncMock(return_value=mock_response)
@@ -348,8 +360,8 @@ class TestOllamaClientChatStream:
                 yield chunk
 
         mock_client = AsyncMock()
-        mock_client.chat = MagicMock()
-        mock_client.chat.return_value = mock_stream()
+        # ollama.AsyncClient.chat() returns a coroutine that resolves to an async generator
+        mock_client.chat = AsyncMock(return_value=mock_stream())
 
         with patch("app.services.ai.llm_service.ollama.AsyncClient", return_value=mock_client):
             client = OllamaClient(
@@ -377,8 +389,8 @@ class TestOllamaClientChatStream:
             yield {"message": {"content": "Hi", "role": "assistant"}, "model": "llama3.2", "done": True}
 
         mock_client = AsyncMock()
-        mock_client.chat = MagicMock()
-        mock_client.chat.return_value = mock_stream()
+        # ollama.AsyncClient.chat() returns a coroutine
+        mock_client.chat = AsyncMock(return_value=mock_stream())
 
         with patch("app.services.ai.llm_service.ollama.AsyncClient", return_value=mock_client):
             client = OllamaClient(
@@ -403,8 +415,8 @@ class TestOllamaClientChatStream:
             yield {"message": {"content": "Response", "role": "assistant"}, "model": "gemma3:12b", "done": True}
 
         mock_client = AsyncMock()
-        mock_client.chat = MagicMock()
-        mock_client.chat.return_value = mock_stream()
+        # ollama.AsyncClient.chat() returns a coroutine
+        mock_client.chat = AsyncMock(return_value=mock_stream())
 
         with patch("app.services.ai.llm_service.ollama.AsyncClient", return_value=mock_client):
             client = OllamaClient(
@@ -427,7 +439,12 @@ class TestOllamaClientChatStream:
     async def test_chat_stream_connection_error(self):
         """Test streaming chat with connection error."""
         mock_client = AsyncMock()
-        mock_client.chat = MagicMock(side_effect=Exception("Connection refused"))
+        # chat() returns a coroutine that raises an error when awaited
+
+        async def error_coroutine(*args, **kwargs):
+            raise Exception("Connection refused")
+
+        mock_client.chat = AsyncMock(side_effect=error_coroutine)
 
         with patch("app.services.ai.llm_service.ollama.AsyncClient", return_value=mock_client):
             client = OllamaClient(
@@ -446,7 +463,12 @@ class TestOllamaClientChatStream:
     async def test_chat_stream_model_not_found(self):
         """Test streaming chat with model not found."""
         mock_client = AsyncMock()
-        mock_client.chat = MagicMock(side_effect=Exception("model 'unknown' not found"))
+        # chat() returns a coroutine that raises an error when awaited
+
+        async def error_coroutine(*args, **kwargs):
+            raise Exception("model 'unknown' not found")
+
+        mock_client.chat = AsyncMock(side_effect=error_coroutine)
 
         with patch("app.services.ai.llm_service.ollama.AsyncClient", return_value=mock_client):
             client = OllamaClient(
@@ -468,12 +490,13 @@ class TestOllamaClientIntegration:
     @pytest.mark.asyncio
     async def test_full_chat_flow(self):
         """Test complete flow: health check -> list models -> chat."""
-        mock_models_response = {
-            "models": [
-                {"name": "gemma3:12b", "size": 7340032000},
-            ]
-        }
+        from types import SimpleNamespace
 
+        # Mock models response with proper Model structure
+        mock_model = SimpleNamespace(model="gemma3:12b", size=7340032000)
+        mock_models_response = SimpleNamespace(models=[mock_model])
+
+        # Mock chat response (ollama returns a dict-like object)
         mock_chat_response = {
             "message": {"role": "assistant", "content": "Test response"},
             "model": "gemma3:12b",

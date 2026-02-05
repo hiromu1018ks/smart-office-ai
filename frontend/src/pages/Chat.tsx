@@ -50,7 +50,7 @@ export function Chat() {
   const activeConversation = getActiveConversation()
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col" data-testid="chat-page">
       <BlurFade>
         <div className="mb-6">
           <h1 className="text-3xl font-semibold tracking-tight">Chat</h1>
@@ -72,6 +72,7 @@ export function Chat() {
               className="h-8 w-8"
               onClick={handleNewChat}
               aria-label="New conversation"
+              data-testid="new-conversation-btn"
             >
               <Plus className="h-4 w-4" />
             </Button>

@@ -13,6 +13,12 @@ import { Link } from 'react-router'
 /**
  * Dashboard page component.
  * Shows overview cards and quick actions.
+ *
+ * TODO: Make stats dynamic via props or API
+ * Currently hardcoded for placeholder UI
+ * Issue: Tests verify hardcoded values that won't match real data
+ *
+ * @see Dashboard.test.tsx for data contract tests
  */
 export function Dashboard() {
   const stats = [
@@ -51,7 +57,7 @@ export function Dashboard() {
   ]
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8" data-testid="dashboard-page">
       {/* Header */}
       <BlurFade>
         <div>
@@ -69,6 +75,7 @@ export function Dashboard() {
             <MagicCard
               key={stat.title}
               className="p-6"
+              data-testid={`stat-card-${stat.title.toLowerCase()}`}
               style={{ animationDelay: `${index * 50}ms` }}
             >
               <Link to={stat.href} className="block">
@@ -99,19 +106,19 @@ export function Dashboard() {
           </p>
 
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <Link to="/chat">
+            <Link to="/chat" data-testid="quick-action-new-chat">
               <Button className="w-full" variant="outline">
                 <MessageSquare className="mr-2 h-4 w-4" />
                 New Chat
               </Button>
             </Link>
-            <Link to="/calendar">
+            <Link to="/calendar" data-testid="quick-action-schedule-event">
               <Button className="w-full" variant="outline">
                 <Calendar className="mr-2 h-4 w-4" />
                 Schedule Event
               </Button>
             </Link>
-            <Link to="/tasks">
+            <Link to="/tasks" data-testid="quick-action-add-task">
               <Button className="w-full" variant="outline">
                 <CheckSquare className="mr-2 h-4 w-4" />
                 Add Task

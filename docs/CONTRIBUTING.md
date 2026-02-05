@@ -30,6 +30,19 @@ Smart Office AI へのコントリビューションに興味を持っていた�
 | Python | 3.12+ | バックエンド開発 |
 | Git | 2.30+ | バージョン管理 |
 
+#### NixOS の場合
+
+flake.nix で開発環境が定義されています：
+
+```bash
+# 開発環境に入る
+nix shell
+
+# Chromium が自動的に利用可能
+# E2Eテスト実行時は環境変数を設定:
+export PLAYWRIGHT_CHROMIUM_PATH=$(which chromium)
+```
+
 ### 初期セットアップ
 
 ```bash
@@ -265,12 +278,58 @@ npm run test:coverage
 
 **カバレッジ要件**: 80%以上
 
-### E2E テスト
+### E2E テスト（Playwright）
 
+#### NixOS の場合
+
+NixOS ではシステムに Chromium をインストールする必要があります。
+
+**1. ZaneyOS の場合** (`/home/hart/zaneyos/hosts/<HOSTNAME>/host-packages.nix`):
+
+```nix
+environment.systemPackages = with pkgs; [
+  audacity
+  discord
+  nodejs
+  chromium    # ← 追加
+];
+```
+
+**2. 適用**:
 ```bash
-# プレイグライト（準備中）
+cd /home/hart/zaneyos
+sudo nixos-rebuild switch --flake .#<HOSTNAME>
+```
+
+**3. E2Eテスト実行**:
+```bash
+cd frontend
+export PLAYWRIGHT_CHROMIUM_PATH=/run/current-system/sw/bin/chromium
 npm run test:e2e
 ```
+
+#### 非 NixOS Linux/macOS/Windows の場合
+
+```bash
+cd frontend
+
+# 初回のみ：ブラウザのインストール
+npm run test:e2e:install
+
+# E2Eテスト実行
+npm run test:e2e
+
+# UIモードで実行
+npm run test:e2e:ui
+
+# デバッグモード
+npm run test:e2e:debug
+
+# レポート表示
+npm run test:e2e:report
+```
+
+**カバレッジ要件**: クリティカルなユーザーフロー（ログイン → チャット → ファイルアップロード）
 
 ---
 
@@ -421,6 +480,25 @@ A: 現在の状態を確認してください：
 make shell-backend
 alembic current
 alembic history
+```
+
+### Q: NixOS で E2E テストが失敗します
+
+A: NixOS ではシステムに Chromium をインストールする必要があります：
+
+**ZaneyOS の場合**:
+```bash
+# /home/hart/zaneyos/hosts/<HOSTNAME>/host-packages.nix に chromium を追加
+environment.systemPackages = with pkgs; [ chromium ];
+
+# 適用
+cd /home/hart/zaneyos
+sudo nixos-rebuild switch --flake .#<HOSTNAME>
+
+# E2Eテスト実行
+cd /path/to/smart-office-ai/frontend
+export PLAYWRIGHT_CHROMIUM_PATH=/run/current-system/sw/bin/chromium
+npm run test:e2e
 ```
 
 ---

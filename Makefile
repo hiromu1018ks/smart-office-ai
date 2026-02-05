@@ -1,4 +1,4 @@
-.PHONY: up down logs ps restart shell-db shell-backend migration-create migration-up migration-down destroy
+.PHONY: up down logs ps restart shell-db shell-backend migration-create migration-up migration-down destroy test test-integration test-unit
 
 # コンテナ起動
 up:
@@ -43,3 +43,24 @@ migration-down:
 # 全削除（データ含む）
 destroy:
 	docker-compose down -v
+
+# テスト関連
+test: test-unit
+
+# ユニットテストのみ（モック使用、Ollama不要）
+test-unit:
+	docker-compose exec backend pytest -v -m "not integration"
+
+# 統合テスト（Ollama実接続、事前にOllamaを起動しておく必要あり）
+test-integration:
+	docker-compose up -d ollama
+	echo "Waiting for Ollama to be ready..."
+	sleep 5
+	docker-compose exec backend pytest -m integration -v
+
+# すべてのテスト
+test-all:
+	docker-compose up -d ollama
+	echo "Waiting for Ollama to be ready..."
+	sleep 5
+	docker-compose exec backend pytest -v

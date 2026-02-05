@@ -20,6 +20,24 @@ Smart Office AI の開発環境セットアップとワークフローについ�
 - Docker 20.10+
 - Docker Compose 2.0+
 - Git 2.30+
+- Node.js 18+（フロントエンド開発）
+- Python 3.12+（バックエンド開発）
+
+#### NixOS / ZaneyOS の場合
+
+**E2Eテスト用にChromiumが必要です**:
+
+ZaneyOS の場合、ホスト設定ファイルに chromium を追加します：
+```nix
+# /home/hart/zaneyos/hosts/<HOSTNAME>/host-packages.nix
+environment.systemPackages = with pkgs; [ chromium ];
+```
+
+適用:
+```bash
+cd /home/hart/zaneyos
+sudo nixos-rebuild switch --flake .#<HOSTNAME>
+```
 
 ### 初期セットアップ
 
@@ -253,14 +271,24 @@ docker-compose exec backend python -m app.core.scripts.seed_db   # シードデ�
 ### フロントエンド開発コマンド
 
 ```bash
-# フロントエンドコンテナ内で実行（実装後）
-docker-compose exec frontend npm run dev     # 開発サーバー起動
-docker-compose exec frontend npm run build   # プロダクションビルド
-docker-compose exec frontend npm run test    # テスト実行
-docker-compose exec frontend npm run lint    # Lint実行
-docker-compose exec frontend npm run type-check  # TypeScript型チェック
-docker-compose exec frontend npm run test:ui     # UI付きテスト
-docker-compose exec frontend npm run test:coverage  # カバレッジ計測
+# フロントエンドディレクトリで実行
+cd frontend
+
+npm run dev                  # 開発サーバー起動（HMR有効）
+npm run build                # プロダクションビルド
+npm run preview              # プロダクションビルドのプレビュー
+npm run test                 # テスト実行（vitest）
+npm run test:ui              # UI付きテスト実行
+npm run test:coverage        # カバレッジ計測
+npm run lint                 # ESLint コード品質チェック
+npm run type-check           # TypeScript 型チェック
+
+# E2Eテスト（Playwright）
+npm run test:e2e             # E2Eテスト実行
+npm run test:e2e:ui          # UIモードで実行
+npm run test:e2e:debug       # デバッグモード
+npm run test:e2e:report      # レポート表示
+npm run test:e2e:install     # ブラウザインストール（初回のみ）
 ```
 
 ### フロントエンドアーキテクチャ
@@ -342,7 +370,25 @@ for await (const chunk of result.streamChunks()) {
 |-----------|------|--------|
 | ユニットテスト | 個別の関数・クラスのテスト | `pytest tests/test_database.py` |
 | インテグレーションテスト | DB、外部サービスとの連携テスト | `pytest tests/test_integration.py` |
-| E2Eテスト | ブラウザでの操作テスト（実装後） | `playwright tests/e2e/` |
+| E2Eテスト | ブラウザでの操作テスト（Playwright） | 下記参照 |
+
+### E2Eテスト実行方法
+
+#### NixOS / ZaneyOS の場合
+
+```bash
+cd frontend
+export PLAYWRIGHT_CHROMIUM_PATH=/run/current-system/sw/bin/chromium
+npm run test:e2e
+```
+
+#### 非 NixOS の場合
+
+```bash
+cd frontend
+npm run test:e2e:install  # 初回のみ
+npm run test:e2e
+```
 
 ### テスト実行
 
@@ -541,13 +587,14 @@ smart-office-ai/
 
 | 変数名 | 説明 | デフォルト値 |
 |--------|------|------------|
-| `DATABASE_URL` | PostgreSQL接続URL | - |
+| `DATABASE_URL` | PostgreSQL接続URL | `postgresql+asyncpg://...` |
 | `REDIS_URL` | Redis接続URL | `redis://redis:6379/0` |
 | `JWT_SECRET_KEY` | JWT署名キー（32文字以上推奨） | - |
 | `JWT_ALGORITHM` | JWTアルゴリズム | `HS256` |
-| `ACCESS_TOKEN_EXPIRE_MINUTES` | アクセストークン有効期限（分） | `30` |
+| `JWT_ACCESS_TOKEN_EXPIRE_MINUTES` | アクセストークン有効期限（分） | `30` |
 | `OLLAMA_BASE_URL` | Ollama API URL | `http://ollama:11434` |
-| `OLLAMA_MODEL` | デフォルトモデル名 | `llama3.2` |
+| `OLLAMA_MODEL` | デフォルトモデル名 | `gemma3:12b` |
+| `OLLAMA_TIMEOUT` | リクエストタイムアウト（秒） | `120` |
 | `DB_POOL_SIZE` | DB接続プールサイズ | `5` |
 | `DB_MAX_OVERFLOW` | DB接続プール最大オーバーフロー | `10` |
 | `DB_ECHO` | SQLクエリログ出力 | `false` |

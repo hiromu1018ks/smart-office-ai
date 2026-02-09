@@ -150,7 +150,9 @@ class TestOllamaClientListModels:
     async def test_list_models_empty(self):
         """Test listing models when none available."""
         mock_client = AsyncMock()
-        mock_client.list = AsyncMock(return_value={"models": []})
+        from types import SimpleNamespace
+        mock_response = SimpleNamespace(models=[])
+        mock_client.list = AsyncMock(return_value=mock_response)
 
         with patch("app.services.ai.llm_service.ollama.AsyncClient", return_value=mock_client):
             client = OllamaClient(

@@ -34,7 +34,7 @@ export function Layout({ className }: LayoutProps) {
           onMobileMenuClick={() => setMobileMenuOpen(true)}
         />
 
-        <main className="p-4 sm:p-6 lg:p-8">
+        <main className="p-4 sm:p-6 lg:p-8 h-[calc(100vh-64px)] overflow-hidden">
           <Outlet />
         </main>
       </div>

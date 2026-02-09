@@ -24,20 +24,6 @@ export interface ChatMessageProps {
 
 /**
  * Chat message component with markdown rendering.
- *
- * @example
- * ```tsx
- * <ChatMessage
- *   message={{
- *     id: '1',
- *     role: 'user',
- *     content: 'Hello AI',
- *     isStreaming: false,
- *     timestamp: new Date()
- *   }}
- *   showTimestamp
- * />
- * ```
  */
 export function ChatMessage({ message, className, showTimestamp = false }: ChatMessageProps) {
   const isUser = message.role === 'user'
@@ -54,7 +40,7 @@ export function ChatMessage({ message, className, showTimestamp = false }: ChatM
     >
       <div
         className={cn(
-          'max-w-[80%] rounded-lg px-4 py-2',
+          'max-w-[85%] rounded-2xl px-6 py-4',
           isUser
             ? 'bg-primary text-primary-foreground'
             : 'bg-muted text-foreground'
@@ -62,7 +48,7 @@ export function ChatMessage({ message, className, showTimestamp = false }: ChatM
       >
         {/* Content */}
         {message.content && !isUser && (
-          <div className="prose prose-sm dark:prose-invert max-w-none">
+          <div className="prose prose-lg dark:prose-invert max-w-none">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               rehypePlugins={[rehypeHighlight]}
@@ -73,10 +59,34 @@ export function ChatMessage({ message, className, showTimestamp = false }: ChatM
                     href={href}
                     rel="noopener noreferrer"
                     target={href?.startsWith('http') ? '_blank' : undefined}
+                    className="text-primary hover:underline"
                     {...props}
                   >
                     {children}
                   </a>
+                ),
+                // Style code blocks
+                code: ({ className, children, ...props }) => (
+                  <code
+                    className={cn(
+                      'px-2 py-1 rounded-md bg-background/50 font-mono text-sm',
+                      className
+                    )}
+                    {...props}
+                  >
+                    {children}
+                  </code>
+                ),
+                pre: ({ children, ...props }) => (
+                  <pre
+                    className={cn(
+                      'px-4 py-3 rounded-lg bg-background/80 overflow-x-auto',
+                      'border border-border'
+                    )}
+                    {...props}
+                  >
+                    {children}
+                  </pre>
                 ),
               }}
             >
@@ -87,17 +97,19 @@ export function ChatMessage({ message, className, showTimestamp = false }: ChatM
 
         {/* User messages don't need markdown for now */}
         {message.content && isUser && (
-          <p className="whitespace-pre-wrap break-words">{message.content}</p>
+          <p className="whitespace-pre-wrap break-words text-lg leading-relaxed">{message.content}</p>
         )}
 
         {/* Typing indicator for streaming assistant messages */}
         {message.isStreaming && !isUser && (
-          <TypingIndicator className="text-foreground/70" />
+          <div className="mt-2">
+            <TypingIndicator className="text-foreground/70" />
+          </div>
         )}
 
         {/* Error message */}
         {isError && (
-          <p className="mt-2 text-sm text-destructive">
+          <p className="mt-3 text-base text-destructive font-medium">
             {message.error}
           </p>
         )}
@@ -106,7 +118,7 @@ export function ChatMessage({ message, className, showTimestamp = false }: ChatM
         {showTimestamp && (
           <time
             dateTime={message.timestamp.toISOString()}
-            className="mt-1 block text-xs opacity-70"
+            className="mt-2 block text-sm opacity-70"
           >
             {format(message.timestamp, 'HH:mm')}
           </time>

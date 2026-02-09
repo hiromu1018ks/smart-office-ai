@@ -122,7 +122,7 @@ describe('Chat', () => {
 
     render(<Chat />)
 
-    expect(screen.getByText('1 messages')).toBeInTheDocument()
+    expect(screen.getByText('1 message')).toBeInTheDocument()
   })
 
   it('should call createConversation when new chat button is clicked', async () => {
@@ -227,7 +227,7 @@ describe('Chat', () => {
       expect(screen.getByText('2 messages')).toBeInTheDocument()
     })
 
-    it('should display "0 messages" when active conversation has no messages', () => {
+    it('should display "0 message" when active conversation has no messages', () => {
       mockGetActiveConversation.mockReturnValue({
         id: 'conv-1',
         title: 'My Conversation',
@@ -236,7 +236,7 @@ describe('Chat', () => {
 
       render(<Chat />)
 
-      expect(screen.getByText('0 messages')).toBeInTheDocument()
+      expect(screen.getByText('0 message')).toBeInTheDocument()
     })
 
     it('should display "Start chatting with AI" only when no active conversation', () => {

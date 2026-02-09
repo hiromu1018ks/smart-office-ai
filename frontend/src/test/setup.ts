@@ -62,3 +62,19 @@ HTMLFormElement.prototype.requestSubmit = vi.fn(function(this: HTMLFormElement) 
   this.dispatchEvent(event)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 }) as any
+
+// Mock getBoundingClientRect for floating-ui and other DOM libraries
+// This is needed because jsdom's implementation is incomplete
+Element.prototype.getBoundingClientRect = vi.fn(function(this: Element) {
+  return {
+    width: 0,
+    height: 0,
+    top: 0,
+    left: 0,
+    bottom: 0,
+    right: 0,
+    x: 0,
+    y: 0,
+    toJSON: () => ({}),
+  }
+}) as any

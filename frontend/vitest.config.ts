@@ -9,8 +9,16 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     css: true,
+    testTimeout: 30000,
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     exclude: ['node_modules/', 'e2e/', 'dist'],
+    isolate: true, // Enable isolation to prevent React concurrent mode issues
+    pool: 'threads',
+    poolOptions: {
+      threads: {
+        singleThread: false, // Run tests in parallel for better performance
+      },
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

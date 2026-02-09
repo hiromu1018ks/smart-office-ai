@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 // Constants for textarea auto-resize calculation
-const LINE_HEIGHT_PX = 24
+const LINE_HEIGHT_PX = 28
 
 export interface ChatInputProps {
   /** Callback when message is sent */
@@ -29,23 +29,14 @@ export interface ChatInputProps {
 
 /**
  * Chat input component with auto-resize textarea.
- *
- * @example
- * ```tsx
- * <ChatInput
- *   onSend={(content) => sendMessage(content)}
- *   disabled={isStreaming}
- *   placeholder="Type your message..."
- * />
- * ```
  */
 export function ChatInput({
   onSend,
   disabled = false,
   placeholder = 'Type your message...',
   className,
-  minRows = 1,
-  maxRows = 5,
+  minRows = 3,
+  maxRows = 10,
 }: ChatInputProps) {
   const [content, setContent] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -85,28 +76,31 @@ export function ChatInput({
   }
 
   return (
-    <div className={cn('flex gap-2', className)}>
-      <textarea
-        ref={textareaRef}
-        data-testid="chat-input"
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder={placeholder}
-        disabled={disabled}
-        rows={minRows}
-        className="flex-1 resize-none rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-        style={{ maxHeight: `${maxRows * LINE_HEIGHT_PX}px` }}
-      />
+    <div className={cn('flex gap-4 items-end', className)}>
+      <div className="flex-1 relative">
+        <textarea
+          ref={textareaRef}
+          data-testid="chat-input"
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+          disabled={disabled}
+          rows={minRows}
+          className="w-full resize-none rounded-xl border-2 border-input bg-muted/50 px-5 py-4 text-lg focus:border-primary focus:bg-background focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50 transition-colors placeholder:text-muted-foreground/60"
+          style={{ maxHeight: `${maxRows * LINE_HEIGHT_PX}px` }}
+        />
+      </div>
       <Button
         onClick={handleSend}
         disabled={disabled || !content.trim()}
-        size="icon"
-        className="h-9 w-9 shrink-0"
+        size="lg"
+        className="h-14 px-6 shrink-0 text-base font-medium"
         aria-label="Send message"
         data-testid="send-button"
       >
-        <Send className="h-4 w-4" />
+        <Send className="h-5 w-5 mr-2" />
+        Send
       </Button>
     </div>
   )

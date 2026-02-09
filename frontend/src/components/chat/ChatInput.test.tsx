@@ -163,6 +163,6 @@ describe('ChatInput', () => {
 
     const textarea = screen.getByRole('textbox')
     expect(textarea).toHaveAttribute('rows', '2')
-    expect(textarea).toHaveStyle({ maxHeight: '240px' }) // 10 * 24
+    expect(textarea).toHaveStyle({ maxHeight: '280px' }) // 10 * 28 (LINE_HEIGHT_PX)
   })
 })

@@ -96,7 +96,9 @@ async def get_current_user_dep(
 
 
 async def get_optional_user(
-    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(HTTPBearer(auto_error=False))],
+    credentials: Annotated[
+        HTTPAuthorizationCredentials | None, Depends(HTTPBearer(auto_error=False))
+    ],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> User | None:
     """
@@ -118,7 +120,9 @@ async def get_optional_user(
         return None
 
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED
+)
 async def register(
     user_data: UserCreateRequest,
     db: Annotated[AsyncSession, Depends(get_db)],
@@ -136,12 +140,12 @@ async def register(
     Raises:
         HTTPException 400: If email or username already exists
     """
-    # Check for existing email
+    # Check for existing email or username - use generic error message
     result = await db.execute(select(User).where(User.email == user_data.email))
     if result.scalar_one_or_none() is not None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered",
+            detail="Registration failed. Email or username may already be in use.",
         )
 
     # Check for existing username
@@ -149,7 +153,7 @@ async def register(
     if result.scalar_one_or_none() is not None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username already taken",
+            detail="Registration failed. Email or username may already be in use.",
         )
 
     # Create new user

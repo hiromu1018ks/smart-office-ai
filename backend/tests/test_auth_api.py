@@ -76,7 +76,7 @@ class TestRegisterEndpoint:
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         data = response.json()
-        assert "email" in data["detail"].lower() or "already" in data["detail"].lower()
+        assert "registration failed" in data["detail"].lower()
 
     @pytest.mark.asyncio
     async def test_register_duplicate_username(self, client: AsyncClient):
@@ -103,7 +103,7 @@ class TestRegisterEndpoint:
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         data = response.json()
-        assert "username" in data["detail"].lower() or "already" in data["detail"].lower()
+        assert "registration failed" in data["detail"].lower()
 
     @pytest.mark.asyncio
     async def test_register_invalid_email(self, client: AsyncClient):
@@ -232,7 +232,9 @@ class TestLoginEndpoint:
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     @pytest.mark.asyncio
-    async def test_login_inactive_user(self, client: AsyncClient, test_db_session: AsyncSession):
+    async def test_login_inactive_user(
+        self, client: AsyncClient, test_db_session: AsyncSession
+    ):
         """Test login with inactive user."""
         # Create inactive user directly
         user = User(
@@ -267,7 +269,9 @@ class TestLoginEndpoint:
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     @pytest.mark.asyncio
-    async def test_login_with_totp_enabled_requires_code(self, client: AsyncClient, test_user_with_totp: User):
+    async def test_login_with_totp_enabled_requires_code(
+        self, client: AsyncClient, test_user_with_totp: User
+    ):
         """Test login with TOTP enabled but no code provided."""
         response = await client.post(
             LOGIN_URL,
@@ -282,7 +286,9 @@ class TestLoginEndpoint:
         assert "totp" in response.json()["detail"].lower()
 
     @pytest.mark.asyncio
-    async def test_login_with_totp_enabled_valid_code(self, client: AsyncClient, test_user_with_totp: User):
+    async def test_login_with_totp_enabled_valid_code(
+        self, client: AsyncClient, test_user_with_totp: User
+    ):
         """Test login with TOTP enabled and valid code."""
         import pyotp
 
@@ -304,7 +310,9 @@ class TestLoginEndpoint:
         assert "access_token" in data
 
     @pytest.mark.asyncio
-    async def test_login_with_totp_enabled_invalid_code(self, client: AsyncClient, test_user_with_totp: User):
+    async def test_login_with_totp_enabled_invalid_code(
+        self, client: AsyncClient, test_user_with_totp: User
+    ):
         """Test login with TOTP enabled but invalid code."""
         response = await client.post(
             LOGIN_URL,
@@ -323,11 +331,16 @@ class TestTOTPSetupEndpoint:
     """Test POST /api/v1/auth/2fa/setup endpoint."""
 
     @pytest.mark.asyncio
-    async def test_totp_setup_success(self, client: AsyncClient, test_user: User, test_db_session: AsyncSession):
+    async def test_totp_setup_success(
+        self, client: AsyncClient, test_user: User, test_db_session: AsyncSession
+    ):
         """Test successful TOTP setup returns secret but does not save it."""
         # Verify TOTP is not enabled initially
         from sqlalchemy import select
-        result = await test_db_session.execute(select(User).where(User.id == test_user["id"]))
+
+        result = await test_db_session.execute(
+            select(User).where(User.id == test_user["id"])
+        )
         user = result.scalar_one()
         assert user.totp_secret is None
 
@@ -402,7 +415,9 @@ class TestTOTPEnableEndpoint:
         assert data["enabled"] is True
 
     @pytest.mark.asyncio
-    async def test_totp_enable_with_invalid_code(self, client: AsyncClient, test_user: User):
+    async def test_totp_enable_with_invalid_code(
+        self, client: AsyncClient, test_user: User
+    ):
         """Test TOTP enablement with invalid code."""
         # Get a secret from setup
         setup_response = await client.post(
@@ -435,7 +450,9 @@ class TestTOTPDisableEndpoint:
     """Test POST /api/v1/auth/2fa/disable endpoint."""
 
     @pytest.mark.asyncio
-    async def test_totp_disable_success(self, client: AsyncClient, test_user_with_totp: User):
+    async def test_totp_disable_success(
+        self, client: AsyncClient, test_user_with_totp: User
+    ):
         """Test successful TOTP disable."""
         import pyotp
 
@@ -455,7 +472,9 @@ class TestTOTPDisableEndpoint:
         assert data["enabled"] is False
 
     @pytest.mark.asyncio
-    async def test_totp_disable_with_invalid_code(self, client: AsyncClient, test_user_with_totp: User):
+    async def test_totp_disable_with_invalid_code(
+        self, client: AsyncClient, test_user_with_totp: User
+    ):
         """Test TOTP disable with invalid code."""
         response = await client.post(
             TOTP_DISABLE_URL,
@@ -466,7 +485,9 @@ class TestTOTPDisableEndpoint:
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     @pytest.mark.asyncio
-    async def test_totp_disable_when_not_enabled(self, client: AsyncClient, test_user: User):
+    async def test_totp_disable_when_not_enabled(
+        self, client: AsyncClient, test_user: User
+    ):
         """Test TOTP disable when not enabled."""
         response = await client.post(
             TOTP_DISABLE_URL,
@@ -481,7 +502,9 @@ class TestTOTPVerifyEndpoint:
     """Test POST /api/v1/auth/2fa/verify endpoint."""
 
     @pytest.mark.asyncio
-    async def test_totp_verify_success(self, client: AsyncClient, test_user_with_totp: User):
+    async def test_totp_verify_success(
+        self, client: AsyncClient, test_user_with_totp: User
+    ):
         """Test successful TOTP verification."""
         # Get current TOTP code
         import pyotp
@@ -543,7 +566,9 @@ class TestGetCurrentUserDep:
     """Test get_current_user_dep dependency function."""
 
     @pytest.mark.asyncio
-    async def test_get_current_user_with_missing_sub(self, client: AsyncClient, test_db_session: AsyncSession):
+    async def test_get_current_user_with_missing_sub(
+        self, client: AsyncClient, test_db_session: AsyncSession
+    ):
         """Test get_current_user_dep with token missing sub claim."""
         from app.core.security import create_access_token
         from app.api.v1.auth import get_current_user_dep
@@ -552,6 +577,7 @@ class TestGetCurrentUserDep:
 
         # Create token without sub claim
         import jwt
+
         token = jwt.encode({"email": "test@example.com"}, "secret", algorithm="HS256")
 
         credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
@@ -561,14 +587,18 @@ class TestGetCurrentUserDep:
         assert exc_info.value.status_code == 401
 
     @pytest.mark.asyncio
-    async def test_get_current_user_with_nonexistent_user_id(self, client: AsyncClient, test_db_session: AsyncSession):
+    async def test_get_current_user_with_nonexistent_user_id(
+        self, client: AsyncClient, test_db_session: AsyncSession
+    ):
         """Test get_current_user_dep with valid token but nonexistent user."""
         from app.api.v1.auth import get_current_user_dep
         from fastapi.security import HTTPAuthorizationCredentials
         from fastapi import HTTPException
 
         # Create token with nonexistent user ID
-        token = create_access_token({"sub": "nonexistent-user-id", "email": "test@example.com"})
+        token = create_access_token(
+            {"sub": "nonexistent-user-id", "email": "test@example.com"}
+        )
 
         credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
 
@@ -577,7 +607,9 @@ class TestGetCurrentUserDep:
         assert exc_info.value.status_code == 401
 
     @pytest.mark.asyncio
-    async def test_get_optional_user_without_credentials(self, client: AsyncClient, test_db_session: AsyncSession):
+    async def test_get_optional_user_without_credentials(
+        self, client: AsyncClient, test_db_session: AsyncSession
+    ):
         """Test get_optional_user returns None when no credentials provided."""
         from app.api.v1.auth import get_optional_user
 
@@ -585,18 +617,24 @@ class TestGetCurrentUserDep:
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_get_optional_user_with_invalid_token(self, client: AsyncClient, test_db_session: AsyncSession):
+    async def test_get_optional_user_with_invalid_token(
+        self, client: AsyncClient, test_db_session: AsyncSession
+    ):
         """Test get_optional_user returns None with invalid token."""
         from app.api.v1.auth import get_optional_user
         from fastapi.security import HTTPAuthorizationCredentials
 
-        credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials="invalid.token.here")
+        credentials = HTTPAuthorizationCredentials(
+            scheme="Bearer", credentials="invalid.token.here"
+        )
 
         result = await get_optional_user(credentials, test_db_session)
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_get_optional_user_with_valid_token(self, client: AsyncClient, test_db_session: AsyncSession):
+    async def test_get_optional_user_with_valid_token(
+        self, client: AsyncClient, test_db_session: AsyncSession
+    ):
         """Test get_optional_user returns user with valid token."""
         from app.api.v1.auth import get_optional_user
         from fastapi.security import HTTPAuthorizationCredentials
@@ -682,7 +720,7 @@ def test_database_url():
 
     return os.getenv(
         "TEST_DATABASE_URL",
-        settings.DATABASE_URL.rsplit("/", 1)[0] + "/smart_office_ai_test"
+        settings.DATABASE_URL.rsplit("/", 1)[0] + "/smart_office_ai_test",
     )
 
 
@@ -774,7 +812,9 @@ async def test_user(client: AsyncClient) -> dict:
 
 
 @pytest_asyncio.fixture
-async def test_user_with_totp(client: AsyncClient, test_db_session: AsyncSession) -> dict:
+async def test_user_with_totp(
+    client: AsyncClient, test_db_session: AsyncSession
+) -> dict:
     """Create a test user with TOTP enabled."""
     import pyotp
     from app.models.user import User
@@ -826,7 +866,9 @@ class TestEdgeCases:
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     @pytest.mark.asyncio
-    async def test_register_with_invalid_username_special_chars(self, client: AsyncClient):
+    async def test_register_with_invalid_username_special_chars(
+        self, client: AsyncClient
+    ):
         """Test registration with special characters in username."""
         response = await client.post(
             REGISTER_URL,
@@ -853,7 +895,9 @@ class TestEdgeCases:
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     @pytest.mark.asyncio
-    async def test_totp_verify_with_totp_not_enabled(self, client: AsyncClient, test_user: User):
+    async def test_totp_verify_with_totp_not_enabled(
+        self, client: AsyncClient, test_user: User
+    ):
         """Test TOTP verify when TOTP is not enabled."""
         response = await client.post(
             TOTP_VERIFY_URL,
@@ -867,7 +911,9 @@ class TestEdgeCases:
         assert "not enabled" in data["message"].lower()
 
     @pytest.mark.asyncio
-    async def test_me_with_deleted_user(self, client: AsyncClient, test_db_session: AsyncSession):
+    async def test_me_with_deleted_user(
+        self, client: AsyncClient, test_db_session: AsyncSession
+    ):
         """Test /me endpoint with user that was deleted after token creation."""
         from app.main import app
         from app.core.database import get_db

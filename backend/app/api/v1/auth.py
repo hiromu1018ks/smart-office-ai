@@ -209,11 +209,11 @@ async def login(
             detail="Invalid email or password",
         )
 
-    # Check if user is active
+    # Check if user is active - use generic error
     if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User account is inactive",
+            detail="Invalid email or password",
         )
 
     # Check if TOTP is enabled and verify code

@@ -11,7 +11,7 @@
  */
 
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { persist, type StateStorage } from 'zustand/middleware'
 import type { User, LoginRequest, TokenResponse } from '@/lib/types'
 import * as api from '@/lib/api'
 
@@ -37,7 +37,7 @@ interface AuthState {
 /**
  * Custom storage adapter that works with tests.
  */
-const customStorage = {
+const customStorage: StateStorage = {
   getItem: (name: string): string | null => {
     return localStorage.getItem(name)
   },
@@ -167,8 +167,7 @@ export const useAuthStore = create<AuthState>()(
       name: 'soai-auth-state',
       // Only persist token, not runtime state
       partialize: (state) => ({ token: state.token }),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      storage: customStorage as any,
+      storage: customStorage,
     }
   )
 )

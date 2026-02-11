@@ -5,12 +5,11 @@
         X-Frame-Options "DENY"
         # Prevent MIME type sniffing
         X-Content-Type-Options "nosniff"
-        # XSS Protection (legacy browsers)
-        X-XSS-Protection "1; mode=block"
         # Referrer policy
         Referrer-Policy "strict-origin-when-cross-origin"
         # Content Security Policy
-        Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';"
+        # Note: 'unsafe-inline' is used for development. Production should use nonce-based CSP.
+        Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';"
         # Permissions Policy
         Permissions-Policy "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
         # Remove server identification

@@ -36,6 +36,12 @@ from app.schemas.auth import (
 router = APIRouter(prefix="/auth", tags=["authentication"])
 security = HTTPBearer()
 
+# Error message constants to prevent user enumeration attacks
+ERROR_INVALID_CREDENTIALS = "Invalid email or password"
+ERROR_REGISTRATION_FAILED = (
+    "Registration failed. Email or username may already be in use."
+)
+
 
 async def get_current_user_dep(
     credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
@@ -145,7 +151,7 @@ async def register(
     if result.scalar_one_or_none() is not None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Registration failed. Email or username may already be in use.",
+            detail=ERROR_REGISTRATION_FAILED,
         )
 
     # Check for existing username
@@ -153,7 +159,7 @@ async def register(
     if result.scalar_one_or_none() is not None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Registration failed. Email or username may already be in use.",
+            detail=ERROR_REGISTRATION_FAILED,
         )
 
     # Create new user
@@ -199,21 +205,21 @@ async def login(
         verify_password(credentials.password, get_password_hash("dummy"))
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password",
+            detail=ERROR_INVALID_CREDENTIALS,
         )
 
     # Verify password
     if not verify_password(credentials.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password",
+            detail=ERROR_INVALID_CREDENTIALS,
         )
 
     # Check if user is active - use generic error
     if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password",
+            detail=ERROR_INVALID_CREDENTIALS,
         )
 
     # Check if TOTP is enabled and verify code

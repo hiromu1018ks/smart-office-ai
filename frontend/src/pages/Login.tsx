@@ -43,16 +43,14 @@ export function Login() {
         totp_code: isTotpRequired ? totpCode || undefined : undefined,
       })
 
-      // Clear sensitive form data immediately after login attempt
-      setPassword('')
-      setTotpCode('')
-
       // Navigate to dashboard on successful login
       navigate('/')
     } catch {
       // Error is handled by auth store
-      // Clear password on failure too
+    } finally {
+      // Always clear sensitive form data after login attempt
       setPassword('')
+      setTotpCode('')
     }
   }
 
@@ -135,6 +133,8 @@ export function Login() {
                   placeholder="123456"
                   pattern="[0-9]{6}"
                   maxLength={6}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
                   value={totpCode}
                   onChange={(e) => {

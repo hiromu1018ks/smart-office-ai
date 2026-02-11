@@ -19,7 +19,7 @@ backend_dir = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(backend_dir))
 
 from app.core.database import Base
-from app.models import User  # noqa: F401
+from app.models import Conversation, Message, User  # noqa: F401
 
 # this is the Alembic Config object
 config = context.config

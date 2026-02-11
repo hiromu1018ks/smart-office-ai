@@ -1,11 +1,16 @@
 """User model."""
 
 import uuid
+from typing import TYPE_CHECKING
+
 from sqlalchemy import Boolean, String, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
 from app.models.base import TimestampMixin
+
+if TYPE_CHECKING:
+    from app.models.chat import Conversation
 
 
 class User(TimestampMixin, Base):
@@ -56,6 +61,14 @@ class User(TimestampMixin, Base):
         Boolean,
         default=True,
         nullable=False,
+    )
+
+    # Relationships
+    conversations: Mapped[list["Conversation"]] = relationship(
+        "Conversation",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        order_by="Conversation.created_at.desc()",
     )
 
     def __repr__(self) -> str:

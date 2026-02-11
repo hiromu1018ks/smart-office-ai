@@ -21,7 +21,6 @@ export function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [totpCode, setTotpCode] = useState('')
-  const [rememberMe, setRememberMe] = useState(false)
 
   // Check if TOTP is required (based on error message)
   const isTotpRequired = error != null && isTOTPRequiredError(error)
@@ -44,10 +43,16 @@ export function Login() {
         totp_code: isTotpRequired ? totpCode || undefined : undefined,
       })
 
+      // Clear sensitive form data immediately after login attempt
+      setPassword('')
+      setTotpCode('')
+
       // Navigate to dashboard on successful login
       navigate('/')
     } catch {
       // Error is handled by auth store
+      // Clear password on failure too
+      setPassword('')
     }
   }
 
@@ -124,7 +129,7 @@ export function Login() {
                 </p>
                 <input
                   id="totp"
-                  type="text"
+                  type="password"
                   name="totp"
                   data-testid="login-totp"
                   placeholder="123456"
@@ -143,18 +148,7 @@ export function Login() {
               </div>
             )}
 
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  data-testid="login-remember-me"
-                  className="rounded border-input"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  disabled={isLoading}
-                />
-                Remember me
-              </label>
+            <div className="flex items-center justify-end">
               <Link
                 to="/forgot-password"
                 data-testid="login-forgot-password"

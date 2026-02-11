@@ -90,12 +90,7 @@ describe('Login Page', () => {
       expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument()
     })
 
-    it('should render remember me checkbox', () => {
-      render(<Login />, { wrapper })
 
-      expect(screen.getByRole('checkbox')).toBeInTheDocument()
-      expect(screen.getByText(/remember me/i)).toBeInTheDocument()
-    })
 
     it('should render forgot password link', () => {
       render(<Login />, { wrapper })
@@ -363,18 +358,5 @@ describe('Login Page', () => {
     })
   })
 
-  describe('Remember Me', () => {
-    it('should allow checking remember me checkbox', async () => {
-      const user = userEvent.setup()
-      render(<Login />, { wrapper })
 
-      const checkbox = screen.getByRole('checkbox')
-
-      expect(checkbox).not.toBeChecked()
-
-      await user.click(checkbox)
-
-      expect(checkbox).toBeChecked()
-    })
-  })
 })

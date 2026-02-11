@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Navigate } from 'react-router'
 import type { ReactNode } from 'react'
 import { useAuthStore } from '@/stores/authStore'
@@ -20,15 +20,29 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading, checkAuth } = useAuthStore()
   const [hasCheckedAuth, setHasCheckedAuth] = useState(false)
+  const isCheckingRef = useRef(false)
 
   // Check authentication on mount (only once)
   useEffect(() => {
     const checkAuthOnMount = async () => {
-      await checkAuth()
-      setHasCheckedAuth(true)
+      // Prevent duplicate calls
+      if (isCheckingRef.current) {
+        return
+      }
+
+      isCheckingRef.current = true
+      try {
+        await checkAuth()
+      } finally {
+        setHasCheckedAuth(true)
+        isCheckingRef.current = false
+      }
     }
-    checkAuthOnMount()
-    // checkAuth is stable from Zustand store, only run on mount
+
+    // Only run if we haven't checked yet
+    if (!hasCheckedAuth && !isCheckingRef.current) {
+      checkAuthOnMount()
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
